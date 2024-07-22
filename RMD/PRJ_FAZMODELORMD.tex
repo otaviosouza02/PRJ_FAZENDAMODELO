@@ -78,7 +78,7 @@ realizado com o auxílio da tecnologia LiDAR}
 
 \begin{center}\includegraphics[width=0.4\linewidth]{IMAGES/CAPA} \end{center}
 
-\centerline {Piracicaba, SP – Data de Emissão: 17 de julho de 2024}
+\centerline {Piracicaba, SP – Data de Emissão: 22 de julho de 2024}
 \newpage
 
 \tableofcontents
@@ -187,7 +187,7 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 \tightlist
 \item
   Diversos são os pacotes carregados. Os nomes e a utilidade de cada um
-  estão descritos na primeira seção do documento.
+  estão descritos na primeira seção do documento. \newpage
 \end{enumerate}
 
 \begin{enumerate}
@@ -196,22 +196,78 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 \tightlist
 \item
   Definição das pastas e local de trabalho
-\item
-  Definição das funções para criação dos gráficos
-\item
-  Definição das equações (estudar quais são)
-\item
-  Download dos dados
 \end{enumerate}
 
-\begin{enumerate}
-\def\labelenumi{\roman{enumi}.}
+\begin{itemize}
 \tightlist
 \item
-  Ao todo foram baixadas 6 nuvens de pontos LiDAR, que antes do
-  processamento encontravam-se da seguinte maneira: (preciso trocar
-  essas imagens pq elas foram coloridas separadamente)
-\end{enumerate}
+  GitHub
+
+  \begin{enumerate}
+  \def\labelenumi{\roman{enumi}.}
+  \tightlist
+  \item
+    C: - pasta raiz
+  \item
+    GitRepo - diretório em que estão agrupados os arquivos a serem
+    upados no GitHub
+  \item
+    PRJ\_FAZENDAMODELO - pasta do projeto
+  \item
+    RMD - código e arquivos utilizados na redação do presente documento
+  \item
+    RESULTADOS - plot da matriz de correlação
+  \item
+    BATCHR - arquivo tipo R com os scripts utilizados no pré e
+    pós-processamento dos dados
+  \item
+    SAIDASSIG - arquivos gerados no QGIS
+  \item
+    SHAPES - arquivos de entrada para uso no SIG
+  \end{enumerate}
+\item
+  LiDAR
+
+  \begin{enumerate}
+  \def\labelenumi{\roman{enumi}.}
+  \tightlist
+  \item
+    C: - pasta raiz
+  \item
+    LiDAR - agrupa todos as nuvens de pontos utilizadas no script
+  \item
+    PRJ\_FAZENDAMODELO - pasta do projeto
+  \item
+    NUVENS - onde se localizam as nuvens de pontos
+  \item
+    A13 - reúne as nuvens do ano de 2013
+  \item
+    TALHOES - nuvem segregada por talhão
+  \item
+    NoNORM - nuvens com solo classificado
+  \item
+    SiNORM - nuvens com solo classificado e normalizadas
+  \item
+    RSTR\_qua - raster apresentando a estimativa da variável de
+    interesse para cada talhão
+  \end{enumerate}
+\end{itemize}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{IMAGES/organizacao-pastas} 
+
+}
+
+\caption{Organização dos diretórios}\label{fig:unnamed-chunk-6}
+\end{figure}
+\newpage
+3
+
+. Definição das funções para criação dos gráficos \newpage
+4. Definição das equações (estudar quais são) \newpage
+5. Download dos dados i. Ao todo foram baixadas 6 nuvens de pontos
+LiDAR, que antes do processamento encontravam-se da seguinte maneira:
 
 \begin{figure}
 
@@ -219,18 +275,13 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-6}
+\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-7}
 \end{figure}
+\newpage
+6
 
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{5}
-\tightlist
-\item
-  Leitura dos dados LiDAR
-\item
-  Leitura dos dados em Shapefile
-\end{enumerate}
+. Leitura dos dados LiDAR \newpage
+7. Leitura dos dados em Shapefile
 
 \begin{figure}
 
@@ -238,31 +289,119 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-7}
+\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-8}
 \end{figure}
+\newpage
+8
 
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{7}
-\tightlist
-\item
-  Clipagem da nuvem para eliminação de dados indesejados
-\item
-  Classificação
-\item
-  Normalização
-\item
-  Recorte da nuvem em tiles 300x300m
-\item
-  Cálculo de métricas para cada voxel
-\item
-  Seleção de um grupo de métricas para estudo de correlação
-\item
-  Análise da correlação por meio de gráfico
-\item
-  Determinação do modelo de predição
-\item
-  Criação de mapas raster e gráficos
-\end{enumerate}
+. Clipagem da nuvem para eliminação de dados indesejados (mostrar nuvem
+antes e depois)\\
+Antes da clipagem: 68mi pontos\\
+Após clipagem: 18mi pontos
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.4\linewidth]{IMAGES/pre-clipagem-passo8} \includegraphics[width=0.4\linewidth]{IMAGES/pos-clipagem-passo8} 
+
+}
+
+\caption{Comparativo entre as nuvens de pontos antes e após a clipagem}\label{fig:unnamed-chunk-9}
+\end{figure}
+\newpage
+9
+
+. Classificação
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.4\linewidth]{IMAGES/classificacao-pontos-de-solo} \includegraphics[width=0.4\linewidth]{IMAGES/nuvem-com-pontos-de-solo-classificados-mas-sem-normalizacao} 
+
+}
+
+\caption{Processamento e resultado da classificação de solo das nuvens LiDAR}\label{fig:unnamed-chunk-10}
+\end{figure}
+\newpage
+10
+
+. Normalização
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{IMAGES/nuvensnormalizadas} 
+
+}
+
+\caption{Resultado da normalização das nuvens}\label{fig:unnamed-chunk-11}
+\end{figure}
+\newpage
+11
+
+. Recorte da nuvem em tiles 300x300m (colocar a janela do plot do R)
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{IMAGES/Retile} 
+
+}
+
+\caption{Retile da nuvem em quadrados de 300x300m}\label{fig:unnamed-chunk-12}
+\end{figure}
+\newpage
+12
+
+. Cálculo de métricas para cada voxel (explicar voxel)
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{IMAGES/calculo-metricas-voxel} 
+
+}
+
+\caption{Cálculo das métricas para cada voxel}\label{fig:unnamed-chunk-13}
+\end{figure}
+\newpage
+13
+
+. Seleção de um grupo de métricas para estudo de correlação
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{IMAGES/tb-subgrupo-de-metricas-p-analise} 
+
+}
+
+\caption{Tabela com as métricas escolhidas}\label{fig:unnamed-chunk-14}
+\end{figure}
+\newpage
+14
+
+. Análise da correlação por meio de gráfico (falar do gráfico)
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{IMAGES/MatrizDeCorrelacoes} 
+
+}
+
+\caption{Resultado da análise de correlação}\label{fig:unnamed-chunk-15}
+\end{figure}
+\newpage
+15
+
+. Determinação do modelo de predição
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{IMAGES/analise-de-regressao} 
+
+}
+
+\caption{nao sei}\label{fig:unnamed-chunk-16}
+\end{figure}
+\newpage
+16
+
+. Criação de mapas raster e gráficos \newpage \# Fluxograma e etapas
+Tripla amostragem
 
 \end{document}

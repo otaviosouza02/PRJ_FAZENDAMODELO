@@ -83,7 +83,7 @@ library(RCSF)
 if(!require(future))         # Package que permite ao lidR rodar usando
   install.packages("future")          # processamento paralelo de dados
 library(future)
-cores  <- as.integer(parallel::detectCores() - 1)
+cores  <- as.integer(parallel::detectCores() - 4)
 plan(multisession, workers = cores)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

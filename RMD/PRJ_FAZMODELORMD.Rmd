@@ -81,31 +81,108 @@ knitr::include_graphics("IMAGES/fluxogramaDA.png")
 ```
 1. Carregamento dos pacotes
   i. Diversos são os pacotes carregados. Os nomes e a utilidade de cada um estão descritos na primeira seção do documento.
-2. Definição das pastas e local de trabalho
-3. Definição das funções para criação dos gráficos
-4. Definição das equações (estudar quais são)
-5. Download dos dados
-  i. Ao todo foram baixadas 6 nuvens de pontos LiDAR, que antes do processamento encontravam-se da seguinte maneira: (preciso trocar essas imagens pq elas foram coloridas separadamente)  
+\newpage
+2. Definição das pastas e local de trabalho  
+
+* GitHub
+  i. C: - pasta raiz
+  ii. GitRepo - diretório em que estão agrupados os arquivos a serem upados no GitHub
+  iii. PRJ_FAZENDAMODELO - pasta do projeto
+  iv. RMD - código e arquivos utilizados na redação do presente documento
+  v. RESULTADOS - plot da matriz de correlação
+  vi. BATCHR - arquivo tipo R com os scripts utilizados no pré e pós-processamento dos dados
+  vii. SAIDASSIG - arquivos gerados no QGIS
+  viii. SHAPES - arquivos de entrada para uso no SIG  
+  
+* LiDAR 
+  i. C: - pasta raiz
+  ii. LiDAR - agrupa todos as nuvens de pontos utilizadas no script
+  iii. PRJ_FAZENDAMODELO - pasta do projeto
+  iv. NUVENS - onde se localizam as nuvens de pontos
+  v. A13 - reúne as nuvens do ano de 2013
+  vi. TALHOES - nuvem segregada por talhão
+  vii. NoNORM - nuvens com solo classificado
+  viii. SiNORM - nuvens com solo classificado e normalizadas
+  ix. RSTR_qua - raster apresentando a estimativa da variável de interesse para cada talhão
+  
+``` {r, echo=FALSE, fig.cap='Organização dos diretórios', fig.align='center', out.width = "80%"}
+knitr::include_graphics("IMAGES/organizacao-pastas.png")
+```
+\newpage  
+
+3. Definição das funções para criação dos gráficos  
+
+\newpage  
+
+4. Definição das equações (estudar quais são)  
+
+\newpage  
+
+5. Download dos dados  
+  i. Ao todo foram baixadas 6 nuvens de pontos LiDAR, que antes do processamento encontravam-se da seguinte maneira:  
   
 ``` {r, echo=FALSE, fig.cap='Nuvens de pontos LiDAR pré-processadas', fig.align='center', out.width = "40%"}
 knitr::include_graphics("IMAGES/6nuvens.png")
 ```
-
+\newpage
 6. Leitura dos dados LiDAR
+\newpage
 7. Leitura dos dados em Shapefile  
 
 ``` {r, echo=FALSE, fig.cap='Dados contidos nas parcelas inventariadas', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/atributosinventariadas.png")
 ```
+\newpage
+8. Clipagem da nuvem para eliminação de dados indesejados (mostrar nuvem antes e depois)  
+Antes da clipagem: 68mi pontos  
+Após clipagem: 18mi pontos
 
-8. Clipagem da nuvem para eliminação de dados indesejados
+``` {r, echo=FALSE, fig.cap='Comparativo entre as nuvens de pontos antes e após a clipagem', fig.align='center', out.width = "40%", fig.show='hold'}
+knitr::include_graphics(c("IMAGES/pre-clipagem-passo8.png","IMAGES/pos-clipagem-passo8.png"))
+```
+\newpage
 9. Classificação
-10. Normalização
-11. Recorte da nuvem em tiles 300x300m
-12. Cálculo de métricas para cada voxel
-13. Seleção de um grupo de métricas para estudo de correlação
-14. Análise da correlação por meio de gráfico
-15. Determinação do modelo de predição
-16. Criação de mapas raster e gráficos
 
+``` {r, echo=FALSE, fig.cap='Processamento e resultado da classificação de solo das nuvens LiDAR', fig.align='center', out.width = "40%", fig.show='hold'}
+knitr::include_graphics(c("IMAGES/classificacao-pontos-de-solo.png","IMAGES/nuvem-com-pontos-de-solo-classificados-mas-sem-normalizacao.png"))
+```
+\newpage
+10. Normalização
+
+``` {r, echo=FALSE, fig.cap='Resultado da normalização das nuvens', fig.align='center', out.width = "50%"}
+knitr::include_graphics("IMAGES/nuvensnormalizadas.png")
+```
+\newpage
+11. Recorte da nuvem em tiles 300x300m (colocar a janela do plot do R)
+
+``` {r, echo=FALSE, fig.cap='Retile da nuvem em quadrados de 300x300m', fig.align='center', out.width = "50%"}
+knitr::include_graphics("IMAGES/Retile.png")
+```
+\newpage
+12. Cálculo de métricas para cada voxel (explicar voxel)
+
+``` {r, echo=FALSE, fig.cap='Cálculo das métricas para cada voxel', fig.align='center', out.width = "50%"}
+knitr::include_graphics("IMAGES/calculo-metricas-voxel.png")
+```
+\newpage
+13. Seleção de um grupo de métricas para estudo de correlação
+
+``` {r, echo=FALSE, fig.cap='Tabela com as métricas escolhidas', fig.align='center', out.width = "50%"}
+knitr::include_graphics("IMAGES/tb-subgrupo-de-metricas-p-analise.png")
+```
+\newpage
+14. Análise da correlação por meio de gráfico (falar do gráfico)
+
+``` {r, echo=FALSE, fig.cap='Resultado da análise de correlação', fig.align='center', out.width = "50%"}
+knitr::include_graphics("IMAGES/MatrizDeCorrelacoes.jpg")
+```
+\newpage
+15. Determinação do modelo de predição
+
+``` {r, echo=FALSE, fig.cap='nao sei', fig.align='center', out.width = "50%"}
+knitr::include_graphics("IMAGES/analise-de-regressao.png")
+```
+\newpage
+16. Criação de mapas raster e gráficos
+\newpage
 # Fluxograma e etapas Tripla amostragem
