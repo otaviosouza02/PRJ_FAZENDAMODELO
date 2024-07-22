@@ -89,9 +89,27 @@ realizado com o auxílio da tecnologia LiDAR}
 descriçãozinha no R passado em
 aula)}\label{pacotes-utilizados-no-r-colocar-breve-descriuxe7uxe3o---juxe1-tem-uma-descriuxe7uxe3ozinha-no-r-passado-em-aula}
 
-\subsection{Tidyverse}\label{tidyverse}
+\subsection{\texorpdfstring{Tidyverse
+(\url{https://livro.curso-r.com/4-2-tidyverse.html})}{Tidyverse (https://livro.curso-r.com/4-2-tidyverse.html)}}\label{tidyverse-httpslivro.curso-r.com4-2-tidyverse.html}
+
+O Tidyverse é um pacote guarda-chuva e contém diversas funções úteis
+para garantir o dinamismo no script, visualização, processamneto e
+análise dos dados, modelagem etc.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.6\linewidth]{IMAGES/tidyverse} 
+
+}
+
+\caption{Tidyverse}\label{fig:unnamed-chunk-2}
+\end{figure}
 
 \subsection{Sf}\label{sf}
+
+Pacote utilizado para manipulação de objetos do mundo real. Descreve a
+forma com que esses objetos podem ser armazenados e importados e quais
+operações geométricas podem ser definidas por eles.
 
 \subsection{Tidyterra}\label{tidyterra}
 
@@ -131,7 +149,7 @@ subtalhões: 301a (18,933 ha), 301d (34,468 ha), 302a (47,602 ha) e 302c
 
 }
 
-\caption{Mapa da propriedade}\label{fig:unnamed-chunk-2}
+\caption{Mapa da propriedade}\label{fig:unnamed-chunk-3}
 \end{figure}
 \begin{figure}
 
@@ -139,7 +157,7 @@ subtalhões: 301a (18,933 ha), 301d (34,468 ha), 302a (47,602 ha) e 302c
 
 }
 
-\caption{Nuvens LiDAR normalizadas}\label{fig:unnamed-chunk-3}
+\caption{Nuvens LiDAR normalizadas}\label{fig:unnamed-chunk-4}
 \end{figure}
 
 \newpage
@@ -159,7 +177,7 @@ inventário florestal e podem ser identificadas pelos seguintes Id's:
 
 }
 
-\caption{Parcelas com dados de inventário}\label{fig:unnamed-chunk-4}
+\caption{Parcelas com dados de inventário}\label{fig:unnamed-chunk-5}
 \end{figure}
 \newpage
 
@@ -172,7 +190,7 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Fluxograma das etapas de processamento de dados LiDAR para fins de inventário florestal}\label{fig:unnamed-chunk-5}
+\caption{Fluxograma das etapas de processamento de dados LiDAR para fins de inventário florestal}\label{fig:unnamed-chunk-6}
 \end{figure}
 
 \begin{enumerate}
@@ -259,29 +277,70 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Organização dos diretórios}\label{fig:unnamed-chunk-6}
+\caption{Organização dos diretórios}\label{fig:unnamed-chunk-7}
 \end{figure}
 \newpage
-3
 
-. Definição das funções para criação dos gráficos \newpage
-4. Definição das equações (estudar quais são) \newpage
-5. Download dos dados i. Ao todo foram baixadas 6 nuvens de pontos
-LiDAR, que antes do processamento encontravam-se da seguinte maneira:
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  Definição das funções para criação dos gráficos
+\end{enumerate}
+
+\newpage
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  Definição das equações (estudar quais são)
+\end{enumerate}
+
+\newpage
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{4}
+\tightlist
+\item
+  Download e leitura dos dados LiDAR
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  Ao todo foram baixadas 6 nuvens de pontos LiDAR, que antes do
+  processamento encontravam-se da seguinte maneira:
+\end{enumerate}
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.4\linewidth]{IMAGES/6nuvens} 
+{\centering \includegraphics[width=0.4\linewidth]{IMAGES/pre-clipagem-passo8} 
 
 }
 
-\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-7}
+\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-8}
 \end{figure}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  As nuvens foram baixadas pelo seguinte link:
+  \url{https://github.com/FlorestaR/dados/blob/main/5_LIDARF/Modelo/CLOUDS/}
+\end{enumerate}
+
 \newpage
 6
 
-. Leitura dos dados LiDAR \newpage
-7. Leitura dos dados em Shapefile
+. Download e leitura dos dados em Shapefile\\
+i. Os shapes foram baixados pelo seguinte link:
+\url{https://github.com/FlorestaR/dados/blob/main/5_LIDARF/Modelo/SHAPES}
 
 \begin{figure}
 
@@ -289,10 +348,11 @@ LiDAR, que antes do processamento encontravam-se da seguinte maneira:
 
 }
 
-\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-8}
+\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-9}
 \end{figure}
+
 \newpage
-8
+7
 
 . Clipagem da nuvem para eliminação de dados indesejados (mostrar nuvem
 antes e depois)\\
@@ -305,12 +365,13 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Comparativo entre as nuvens de pontos antes e após a clipagem}\label{fig:unnamed-chunk-9}
+\caption{Comparativo entre as nuvens de pontos antes e após a clipagem}\label{fig:unnamed-chunk-10}
 \end{figure}
 \newpage
-9
+8
 
-. Classificação
+. Classificação pq criar novos arquivos .laz? pq a informação n poderia
+ficar contida na variável?
 
 \begin{figure}
 
@@ -318,25 +379,27 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Processamento e resultado da classificação de solo das nuvens LiDAR}\label{fig:unnamed-chunk-10}
+\caption{Processamento e resultado da classificação de solo das nuvens LiDAR}\label{fig:unnamed-chunk-11}
+\end{figure}
+\newpage
+9
+
+. Normalização i. A etapa de normalização tem por finalidade nivelar
+toda a nuvem e é um passo que está diretamente correlacionado à
+classificação do solo.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.4\linewidth]{IMAGES/nuvensnormalizadas} \includegraphics[width=0.4\linewidth]{IMAGES/nivelamento} 
+
+}
+
+\caption{Resultado da normalização das nuvens}\label{fig:unnamed-chunk-12}
 \end{figure}
 \newpage
 10
 
-. Normalização
-
-\begin{figure}
-
-{\centering \includegraphics[width=0.5\linewidth]{IMAGES/nuvensnormalizadas} 
-
-}
-
-\caption{Resultado da normalização das nuvens}\label{fig:unnamed-chunk-11}
-\end{figure}
-\newpage
-11
-
-. Recorte da nuvem em tiles 300x300m (colocar a janela do plot do R)
+. Recorte da nuvem em tiles 300x300m (pq?)
 
 \begin{figure}
 
@@ -344,12 +407,17 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Retile da nuvem em quadrados de 300x300m}\label{fig:unnamed-chunk-12}
+\caption{Retile da nuvem em quadrados de 300x300m}\label{fig:unnamed-chunk-13}
 \end{figure}
 \newpage
-12
 
-. Cálculo de métricas para cada voxel (explicar voxel)
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{10}
+\tightlist
+\item
+  Cálculo de métricas para cada voxel (explicar voxel)
+\end{enumerate}
 
 \begin{figure}
 
@@ -357,10 +425,10 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Cálculo das métricas para cada voxel}\label{fig:unnamed-chunk-13}
+\caption{Cálculo das métricas para cada voxel}\label{fig:unnamed-chunk-14}
 \end{figure}
 \newpage
-13
+12
 
 . Seleção de um grupo de métricas para estudo de correlação
 
@@ -370,10 +438,10 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Tabela com as métricas escolhidas}\label{fig:unnamed-chunk-14}
+\caption{Tabela com as métricas escolhidas}\label{fig:unnamed-chunk-15}
 \end{figure}
 \newpage
-14
+13
 
 . Análise da correlação por meio de gráfico (falar do gráfico)
 
@@ -383,10 +451,10 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Resultado da análise de correlação}\label{fig:unnamed-chunk-15}
+\caption{Resultado da análise de correlação}\label{fig:unnamed-chunk-16}
 \end{figure}
 \newpage
-15
+14
 
 . Determinação do modelo de predição
 
@@ -396,12 +464,11 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{nao sei}\label{fig:unnamed-chunk-16}
+\caption{nao sei}\label{fig:unnamed-chunk-17}
 \end{figure}
 \newpage
-16
+15
 
-. Criação de mapas raster e gráficos \newpage \# Fluxograma e etapas
-Tripla amostragem
+. Criação de mapas raster e gráficos \newpage
 
 \end{document}

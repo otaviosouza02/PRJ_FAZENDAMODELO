@@ -41,8 +41,18 @@ knitr::include_graphics("IMAGES/CAPA.png")
 
 \newpage
 # Pacotes utilizados no R (colocar breve descrição - já tem uma descriçãozinha no R passado em aula)
-## Tidyverse
+## Tidyverse (https://livro.curso-r.com/4-2-tidyverse.html)
+
+O Tidyverse é um pacote guarda-chuva e contém diversas funções úteis para garantir o dinamismo no script, visualização, processamneto e análise dos dados, modelagem etc.
+
+```{r, echo=FALSE, fig.cap='Tidyverse', fig.align='center', out.width="60%"}
+knitr::include_graphics("IMAGES/tidyverse.png")
+```
+
 ## Sf
+
+Pacote utilizado para manipulação de objetos do mundo real. Descreve a forma com que esses objetos podem ser armazenados e importados e quais operações geométricas podem ser definidas por eles. 
+
 ## Tidyterra
 ## Terra
 ## Stars
@@ -118,22 +128,26 @@ knitr::include_graphics("IMAGES/organizacao-pastas.png")
 
 \newpage  
 
-5. Download dos dados  
+5. Download e leitura dos dados LiDAR
   i. Ao todo foram baixadas 6 nuvens de pontos LiDAR, que antes do processamento encontravam-se da seguinte maneira:  
   
 ``` {r, echo=FALSE, fig.cap='Nuvens de pontos LiDAR pré-processadas', fig.align='center', out.width = "40%"}
-knitr::include_graphics("IMAGES/6nuvens.png")
+knitr::include_graphics("IMAGES/pre-clipagem-passo8.png")
 ```
-\newpage
-6. Leitura dos dados LiDAR
-\newpage
-7. Leitura dos dados em Shapefile  
 
+  ii. As nuvens foram baixadas pelo seguinte link: https://github.com/FlorestaR/dados/blob/main/5_LIDARF/Modelo/CLOUDS/
+
+  
+\newpage
+6. Download e leitura dos dados em Shapefile  
+  i. Os shapes foram baixados pelo seguinte link: https://github.com/FlorestaR/dados/blob/main/5_LIDARF/Modelo/SHAPES
+  
 ``` {r, echo=FALSE, fig.cap='Dados contidos nas parcelas inventariadas', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/atributosinventariadas.png")
 ```
+
 \newpage
-8. Clipagem da nuvem para eliminação de dados indesejados (mostrar nuvem antes e depois)  
+7. Clipagem da nuvem para eliminação de dados indesejados (mostrar nuvem antes e depois)  
 Antes da clipagem: 68mi pontos  
 Após clipagem: 18mi pontos
 
@@ -141,48 +155,52 @@ Após clipagem: 18mi pontos
 knitr::include_graphics(c("IMAGES/pre-clipagem-passo8.png","IMAGES/pos-clipagem-passo8.png"))
 ```
 \newpage
-9. Classificação
+8. Classificação
+pq criar novos arquivos .laz? pq a informação n poderia ficar contida na variável?
 
 ``` {r, echo=FALSE, fig.cap='Processamento e resultado da classificação de solo das nuvens LiDAR', fig.align='center', out.width = "40%", fig.show='hold'}
 knitr::include_graphics(c("IMAGES/classificacao-pontos-de-solo.png","IMAGES/nuvem-com-pontos-de-solo-classificados-mas-sem-normalizacao.png"))
 ```
 \newpage
-10. Normalização
+9. Normalização
+  i. A etapa de normalização tem por finalidade nivelar toda a nuvem e é um passo que está diretamente correlacionado à classificação do solo.
 
-``` {r, echo=FALSE, fig.cap='Resultado da normalização das nuvens', fig.align='center', out.width = "50%"}
-knitr::include_graphics("IMAGES/nuvensnormalizadas.png")
+``` {r, echo=FALSE, fig.cap='Resultado da normalização das nuvens', fig.align='center', fig.show='hold', out.width = "40%"}
+knitr::include_graphics(c("IMAGES/nuvensnormalizadas.png","IMAGES/nivelamento.png"))
 ```
 \newpage
-11. Recorte da nuvem em tiles 300x300m (colocar a janela do plot do R)
+10. Recorte da nuvem em tiles 300x300m (pq?)
 
 ``` {r, echo=FALSE, fig.cap='Retile da nuvem em quadrados de 300x300m', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/Retile.png")
 ```
 \newpage
-12. Cálculo de métricas para cada voxel (explicar voxel)
+
+11. Cálculo de métricas para cada voxel (explicar voxel)
 
 ``` {r, echo=FALSE, fig.cap='Cálculo das métricas para cada voxel', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/calculo-metricas-voxel.png")
 ```
 \newpage
-13. Seleção de um grupo de métricas para estudo de correlação
+12. Seleção de um grupo de métricas para estudo de correlação
 
 ``` {r, echo=FALSE, fig.cap='Tabela com as métricas escolhidas', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/tb-subgrupo-de-metricas-p-analise.png")
 ```
 \newpage
-14. Análise da correlação por meio de gráfico (falar do gráfico)
+13. Análise da correlação por meio de gráfico (falar do gráfico)
 
 ``` {r, echo=FALSE, fig.cap='Resultado da análise de correlação', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/MatrizDeCorrelacoes.jpg")
 ```
 \newpage
-15. Determinação do modelo de predição
+14. Determinação do modelo de predição
 
 ``` {r, echo=FALSE, fig.cap='nao sei', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/analise-de-regressao.png")
 ```
 \newpage
-16. Criação de mapas raster e gráficos
+15. Criação de mapas raster e gráficos
 \newpage
+
 # Fluxograma e etapas Tripla amostragem

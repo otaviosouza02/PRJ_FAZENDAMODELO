@@ -83,8 +83,8 @@ library(RCSF)
 if(!require(future))         # Package que permite ao lidR rodar usando
   install.packages("future")          # processamento paralelo de dados
 library(future)
-cores  <- as.integer(parallel::detectCores() - 4)
-plan(multisession, workers = cores)
+#cores  <- as.integer(parallel::detectCores() - 4)
+#plan(multisession, workers = cores)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Define pastas e local de trabalho
@@ -359,6 +359,8 @@ dirTNrm <- str_c(dirNrm, '/TILES')        # Pasta p/ tiles normalizados
 if (!dir.exists(dirTNrm)) {
   dir.create(dirTNrm, showWarnings = F)
 }
+# crashou
+ctg_gSiN <- readLAScatalog(dirNrm)
 # ctg_gSiN <- readLAScatalog(dirTNrm)
 opt_output_files(ctg_gSiN) <-     # Onde guardar as nuvens normalizadas
   str_c(dirTNrm, "/FzMod_{XLEFT}_{YBOTTOM}")    # renomeadas com coords
@@ -395,7 +397,7 @@ opt_output_files(ctg_tile) <-     # Onde guardar as nuvens das parcelas
 opt_select(ctg_tile) <- "xyz"   # Carrega na memória apenas coordenadas   
 opt_filter(ctg_tile) <- "-drop_z_below 0"     # Ignora pontos com z < 0
 D <- plot_metrics(ctg_tile, .stdmetrics_z, par_shp, radius = 11.28)
-
+##plot(D)
 # Escolhe um subgrupo de métricas e dados para estudo da correlação
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 X <- tibble(D) %>% select(VTCC, MHDOM, IDINV, zmean, 
@@ -438,7 +440,7 @@ abline(0,1)
 #    É possível processar a partir deste bloco, desde que já tenham
 #    sido processadas as linhas 1 a 229 (Bloco 1.)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ----
-prjNam    <- "PRJ_Modelo"                             # Nome do projeto
+prjNam    <- "PRJ_FAZENDAMODELO"                             # Nome do projeto
 dirRaizNuvens <- str_c('C:/LiDAR/',prjNam, '/NUVENS') # Raiz das nuvens
 dirDadosLiDAR <- str_c(dirRaizNuvens, '/A13/TALHOES/SiNORM')
 
@@ -464,7 +466,7 @@ dirDadosRaster <- str_c(dirDadosLiDAR, '/RSTR_qua/')        # Quadrados
 if (!dir.exists(dirDadosRaster)) {
   dir.create(dirDadosRaster, showWarnings = F)
 }
-
+#pixelmetrics para um lasCatalog
 pb <- progress_bar$new(total = 2*nNuvens) # Reset da barra de progresso
 for (i in 1:nNuvens) {
   nuvem   <- ctg_taln$filename[i]
