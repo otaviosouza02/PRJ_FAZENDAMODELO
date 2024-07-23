@@ -43,7 +43,7 @@ knitr::include_graphics("IMAGES/CAPA.png")
 # Pacotes utilizados no R (colocar breve descrição - já tem uma descriçãozinha no R passado em aula)
 ## Tidyverse (https://livro.curso-r.com/4-2-tidyverse.html)
 
-O Tidyverse é um pacote guarda-chuva e contém diversas funções úteis para garantir o dinamismo no script, visualização, processamneto e análise dos dados, modelagem etc.
+O Tidyverse é um pacote guarda-chuva e contém diversas funções úteis para garantir o dinamismo no script, visualização, processamento e análise dos dados, modelagem etc. 
 
 ```{r, echo=FALSE, fig.cap='Tidyverse', fig.align='center', out.width="60%"}
 knitr::include_graphics("IMAGES/tidyverse.png")
