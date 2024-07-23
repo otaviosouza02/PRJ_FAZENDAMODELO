@@ -156,7 +156,6 @@ knitr::include_graphics(c("IMAGES/pre-clipagem-passo8.png","IMAGES/pos-clipagem-
 ```
 \newpage
 8. Classificação
-pq criar novos arquivos .laz? pq a informação n poderia ficar contida na variável?
 
 ``` {r, echo=FALSE, fig.cap='Processamento e resultado da classificação de solo das nuvens LiDAR', fig.align='center', out.width = "40%", fig.show='hold'}
 knitr::include_graphics(c("IMAGES/classificacao-pontos-de-solo.png","IMAGES/nuvem-com-pontos-de-solo-classificados-mas-sem-normalizacao.png"))
@@ -169,7 +168,8 @@ knitr::include_graphics(c("IMAGES/classificacao-pontos-de-solo.png","IMAGES/nuve
 knitr::include_graphics(c("IMAGES/nuvensnormalizadas.png","IMAGES/nivelamento.png"))
 ```
 \newpage
-10. Recorte da nuvem em tiles 300x300m (pq?)
+10. Recorte da nuvem em tiles 300x300m
+  O recorte da nuvem em tiles menores tme a função de facilitar o processamento dos dados, tornando-o mais rápido e dinâmico
 
 ``` {r, echo=FALSE, fig.cap='Retile da nuvem em quadrados de 300x300m', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/Retile.png")
