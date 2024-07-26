@@ -78,7 +78,7 @@ realizado com o auxílio da tecnologia LiDAR}
 
 \begin{center}\includegraphics[width=0.4\linewidth]{IMAGES/CAPA} \end{center}
 
-\centerline {Piracicaba, SP – Data de Emissão: 23 de julho de 2024}
+\centerline {Piracicaba, SP – Data de Emissão: 26 de julho de 2024}
 \newpage
 
 \tableofcontents
@@ -181,6 +181,49 @@ inventário florestal e podem ser identificadas pelos seguintes Id's:
 \end{figure}
 \newpage
 
+\section{Conceitos e definições da Dupla
+Amostragem}\label{conceitos-e-definiuxe7uxf5es-da-dupla-amostragem}
+
+A dupla amostragem é composta por duas fases (s1 e s2) - s1: compreende
+uma gama de variáveis explanatórias para cada ponto pertencente a s1. As
+variáveis explanatórias derivam de informações auxiliares disponíveis em
+grande quantidade ao longo da área florestal;\\
+- s2: constitui o inventário terrestre feito num número limitado de
+subamostras, onde todas pertencem à s1 e fornecem o valor das variáveis
+de interesse, ex. densidade local.
+
+Exemplo prático e definições
+(\url{https://www.ipef.br/publicacoes/scientia/nr108/cap09.pdf})\\
+- O erro amostral (E\%) é calculado a partir do desvio padrão S², que
+representa a variação de uma série de médias retiradas da população\\
+- A dupla amostragem se divide em duas fases. Na primeira fase há uma
+maior intensidade amostral e se é medida a variável auxiliar, que deve
+ser de mensuração facilitada. Na segunda fase a intensidade amostral é
+menor e se mede a variável de interesse e a variável auxiliar, pois será
+calculado um estimador de regressão entre as duas. (existe uma diferença
+entre estimadores de regressão e de razão - estudar)\\
+- A alta correlação entre métricas LiDAR e parâmetros biofísicos da
+floresta justificam a adoção da tecnologia na primeira fase da DA, além
+de reduzir a intensidade amostra (custo e trabalho) - Primeira fase:
+lançamento das parcelas e sobrevôo com o LiDAR\\
+- Etapas (2a fase): mensuração de variáveis das árvores (ex. DAP),
+medição de algumas árvores para gerar modelo hipsométrico, que será
+usado para descobrir a altura das outras árvores, cálculo do volume
+também por modelo e extrapolação do volume da parcela.\\
+- O estimador de regressão (estudar) do VTCC deve relacionar a(s)
+variável(eis) auxiliar(es) e também compreende a outros índices
+(constantes para cada região)\\
+- O desvio padrão, intervalo de confiança etc são feitos depois
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.45\linewidth]{IMAGES/fluxograma-da-lidar-e-campo} \includegraphics[width=0.45\linewidth]{IMAGES/eq-estimador-regressao} 
+
+}
+
+\caption{Fluxograma DA e estimador de regressão para VTCC}\label{fig:unnamed-chunk-6}
+\end{figure}
+
 \section{Fluxograma e etapas Dupla
 amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
@@ -190,7 +233,7 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Fluxograma das etapas de processamento de dados LiDAR para fins de inventário florestal}\label{fig:unnamed-chunk-6}
+\caption{Fluxograma das etapas de processamento de dados LiDAR para fins de inventário florestal}\label{fig:unnamed-chunk-7}
 \end{figure}
 
 \begin{enumerate}
@@ -277,8 +320,9 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Organização dos diretórios}\label{fig:unnamed-chunk-7}
+\caption{Organização dos diretórios}\label{fig:unnamed-chunk-8}
 \end{figure}
+
 \newpage
 
 \begin{enumerate}
@@ -323,7 +367,7 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-8}
+\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-9}
 \end{figure}
 
 \begin{enumerate}
@@ -348,7 +392,7 @@ i. Os shapes foram baixados pelo seguinte link:
 
 }
 
-\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-9}
+\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-10}
 \end{figure}
 
 \newpage
@@ -365,8 +409,9 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Comparativo entre as nuvens de pontos antes e após a clipagem}\label{fig:unnamed-chunk-10}
+\caption{Comparativo entre as nuvens de pontos antes e após a clipagem}\label{fig:unnamed-chunk-11}
 \end{figure}
+
 \newpage
 8
 
@@ -378,7 +423,7 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Processamento e resultado da classificação de solo das nuvens LiDAR}\label{fig:unnamed-chunk-11}
+\caption{Processamento e resultado da classificação de solo das nuvens LiDAR}\label{fig:unnamed-chunk-12}
 \end{figure}
 \newpage
 9
@@ -393,7 +438,7 @@ classificação do solo.
 
 }
 
-\caption{Resultado da normalização das nuvens}\label{fig:unnamed-chunk-12}
+\caption{Resultado da normalização das nuvens}\label{fig:unnamed-chunk-13}
 \end{figure}
 \newpage
 10
@@ -408,7 +453,7 @@ rápido e dinâmico
 
 }
 
-\caption{Retile da nuvem em quadrados de 300x300m}\label{fig:unnamed-chunk-13}
+\caption{Retile da nuvem em quadrados de 300x300m}\label{fig:unnamed-chunk-14}
 \end{figure}
 \newpage
 
@@ -426,7 +471,7 @@ rápido e dinâmico
 
 }
 
-\caption{Cálculo das métricas para cada voxel}\label{fig:unnamed-chunk-14}
+\caption{Cálculo das métricas para cada voxel}\label{fig:unnamed-chunk-15}
 \end{figure}
 \newpage
 12
@@ -439,7 +484,7 @@ rápido e dinâmico
 
 }
 
-\caption{Tabela com as métricas escolhidas}\label{fig:unnamed-chunk-15}
+\caption{Tabela com as métricas escolhidas}\label{fig:unnamed-chunk-16}
 \end{figure}
 \newpage
 13
@@ -452,7 +497,7 @@ rápido e dinâmico
 
 }
 
-\caption{Resultado da análise de correlação}\label{fig:unnamed-chunk-16}
+\caption{Resultado da análise de correlação}\label{fig:unnamed-chunk-17}
 \end{figure}
 \newpage
 14
@@ -465,11 +510,75 @@ rápido e dinâmico
 
 }
 
-\caption{nao sei}\label{fig:unnamed-chunk-17}
+\caption{nao sei}\label{fig:unnamed-chunk-18}
 \end{figure}
 \newpage
 15
 
 . Criação de mapas raster e gráficos \newpage
+
+\section{Fluxograma e etapas Tripla
+amostragem}\label{fluxograma-e-etapas-tripla-amostragem}
+
+Composta por 3 fases, s0, s1 e s2:\\
+- O princípio básico é o de que as variáveis explanatórias derivadas das
+informações auxiliares estão disponíveis em duas frequências diferentes.
+A fase s0 fornece informações sobre toda a área, enquanto s1 possui
+dados adicionais de amostras de s0. Logo, a partir da informação
+terrestre coletada de um número x de parcelas de campo (1 camada de
+informação) é possível aferir sobre informações adicionais para outras
+parcelas a partir do uso de preditores (2 camadas de informação) e, por
+fim, o LiDAR coleta dados sobre todas as parcelas (3 camadas de
+informação).\\
+- Logo, a motivação por trás da TA é a de que a gama de informações de
+s1 adiciona alto poder preditivo às variáveis disponíveis para todas as
+parcelas da área (s0)
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{IMAGES/esquematizacao-TA} 
+
+}
+
+\caption{Esquema TA com Lidar}\label{fig:unnamed-chunk-19}
+\end{figure}
+
+Estimativas de pequenas áreas (small area estimation)\\
+- Para sub áreas da floresta onde há pouca informação terrestre, como em
+G na figura acima. Para essas áreas, o uso da amostragem multifásica
+pode ser mais eficiente, já que utilizam um número reduzido de parcelas
+em campo para chegar à mesma precisão da ACE e ACS. Por outro lado, a
+sub área em questão pode ser pequena demais para justificar a adoção de
+um modelo de regressão separado, uma vez que este pode resultar em um
+intervalo de confiança indesejadamente abrangente;\\
+- A ideia, então, é a de utilizar toda a riqueza de informações presente
+nas amostras de S2 para ajustar o modelo (equação utilizada para o
+cálculo de uma variável de interesse) e aplicá-lo para a sub área em
+questão.\\
+- O potencial viés que surge da aplicação do modelo na sub área é
+corrigido pelo uso de modelos residuais empíricos derivados da área
+amostrada em campo. (não entendi direito essa parte) - trecho no texto:
+The potential bias of applying that model in G is then corrected for by
+using the empirical model residuals derived from that small area.\\
+- Caso não existam parcelas de campo na sub área, então deve-se aceitar
+o viés na estimativa e no modelo. São essas as estimativas sintéticas,
+mas apesar do viés é possível calcular a sua variação.
+
+DESIGN-BASED VS MODEL-DEPENDENT APPROACH (ver dps)\\
+- Model-dependent approach: as parcelas amostrais são fixas e as
+observações retiradas desses locais são assumidas como variáveis
+aleatórias, assim como a floresta assume o papel de ser o meio
+realizador desse processo estocástico (?????? o que isso significa?).
+Embora os locais das parcelas possam ser arbitrariamente escolhidos, o
+modelo deve escrever adequadamente o processo estocástico, a fim de
+garantir resultados parciais. (????)\\
+- Os estimadores do forestinventory se baseiam na design-based approach.
+Design-based approach baseia-se na randomização dos locais de amostra de
+forma uniforme e independente. Logo, a floresta por si só e qualquer
+valor de densidade local de x (pertencente a) F (floresta) são fixos e
+não um resultado de um processo estocástico (estudar). (???)\\
+- Na estrutura do Model-dependent approach as parcelas são fixas e
+resultam em um processo estocástico GPT: what is the difference between
+design-based approach and model-dependent approach?
 
 \end{document}
