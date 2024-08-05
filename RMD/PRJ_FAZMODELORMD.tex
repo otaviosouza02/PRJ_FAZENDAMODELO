@@ -78,7 +78,7 @@ realizado com o auxílio da tecnologia LiDAR}
 
 \begin{center}\includegraphics[width=0.4\linewidth]{IMAGES/CAPA} \end{center}
 
-\centerline {Piracicaba, SP – Data de Emissão: 26 de julho de 2024}
+\centerline {Piracicaba, SP – Data de Emissão: 05 de agosto de 2024}
 \newpage
 
 \tableofcontents
@@ -217,14 +217,167 @@ variável(eis) auxiliar(es) e também compreende a outros índices
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.45\linewidth]{IMAGES/fluxograma-da-lidar-e-campo} \includegraphics[width=0.45\linewidth]{IMAGES/eq-estimador-regressao} 
+{\centering \includegraphics[width=0.45\linewidth]{IMAGES/fluxograma-funcoes} \includegraphics[width=0.45\linewidth]{IMAGES/eq-estimador-regressao} 
 
 }
 
 \caption{Fluxograma DA e estimador de regressão para VTCC}\label{fig:unnamed-chunk-6}
 \end{figure}
 
-\section{Fluxograma e etapas Dupla
+\section{Processamento da nuvem
+LiDAR}\label{processamento-da-nuvem-lidar}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{IMAGES/fluxograma-funcoes} 
+
+}
+
+\caption{Fluxograma do processamento da nuvem LiDAR}\label{fig:unnamed-chunk-7}
+\end{figure}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Conferir especificações
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  Verificar se a nuvem gerada se enquadra no que é esperado: densidade
+  de pontos, área escaneada, classificação de pontos etc.
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  Arrumar nuvens
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  Verificação do sistema de coordenadas utilizado e atributos de
+  latitude, longitude e elevação
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  Quadricular
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  Repartição da nuvem em pedaços menores a fim de ganhar eficiência no
+  processamento em paralelo
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  Definir solo e determinar altura dos pontos
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  Assegura e certifica a classificação do solo por diferentes métodos
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{4}
+\tightlist
+\item
+  Classificar outros pontos e ruídos
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  Separar os pontos restantes por sua natureza (edificações, corpos
+  d'água etc)
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{5}
+\tightlist
+\item
+  Quadrículas limpas
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  remoção dos ruídos após classificação
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{6}
+\item
+  Produção de mapas DTM (elevação do solo), DSM (elevação do solo +
+  vegetação) e DEM (elevação da vegetação)
+\item
+  Normalização da nuvem
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+  Joga tudo pro mesmo plano
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{8}
+\tightlist
+\item
+  Cálculo de métricas LiDAR
+\end{enumerate}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{IMAGES/als-e-info-campo} 
+
+}
+
+\caption{Esquematização do processo de inventário com ALS e informação terrestre}\label{fig:unnamed-chunk-8}
+\end{figure}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi}.}
+\tightlist
+\item
+\item
+  O p90 (percentil 90) representa a altura em que 90\% dos pontos da
+  nuvem LiDAR se encontram abaixo desta. Cada quadrícula possui o seu
+  própio p90 e ele tende a apresentar boa correlação com a realidade de
+  campo. A intenção de exisitrem diversas métricas LiDAR é a de ver
+  quais delas possuem boa correlação com os atributos de interesse
+\end{enumerate}
+
+\newpage
+
+\subsection{Fluxograma e etapas Dupla
 amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 \begin{figure}
@@ -233,7 +386,7 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Fluxograma das etapas de processamento de dados LiDAR para fins de inventário florestal}\label{fig:unnamed-chunk-7}
+\caption{Fluxograma das etapas de processamento de dados LiDAR para fins de inventário florestal}\label{fig:unnamed-chunk-9}
 \end{figure}
 
 \begin{enumerate}
@@ -320,7 +473,7 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Organização dos diretórios}\label{fig:unnamed-chunk-8}
+\caption{Organização dos diretórios}\label{fig:unnamed-chunk-10}
 \end{figure}
 
 \newpage
@@ -367,7 +520,7 @@ amostragem}\label{fluxograma-e-etapas-dupla-amostragem}
 
 }
 
-\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-9}
+\caption{Nuvens de pontos LiDAR pré-processadas}\label{fig:unnamed-chunk-11}
 \end{figure}
 
 \begin{enumerate}
@@ -392,7 +545,7 @@ i. Os shapes foram baixados pelo seguinte link:
 
 }
 
-\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-10}
+\caption{Dados contidos nas parcelas inventariadas}\label{fig:unnamed-chunk-12}
 \end{figure}
 
 \newpage
@@ -409,7 +562,7 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Comparativo entre as nuvens de pontos antes e após a clipagem}\label{fig:unnamed-chunk-11}
+\caption{Comparativo entre as nuvens de pontos antes e após a clipagem}\label{fig:unnamed-chunk-13}
 \end{figure}
 
 \newpage
@@ -423,7 +576,7 @@ Após clipagem: 18mi pontos
 
 }
 
-\caption{Processamento e resultado da classificação de solo das nuvens LiDAR}\label{fig:unnamed-chunk-12}
+\caption{Processamento e resultado da classificação de solo das nuvens LiDAR}\label{fig:unnamed-chunk-14}
 \end{figure}
 \newpage
 9
@@ -438,7 +591,7 @@ classificação do solo.
 
 }
 
-\caption{Resultado da normalização das nuvens}\label{fig:unnamed-chunk-13}
+\caption{Resultado da normalização das nuvens}\label{fig:unnamed-chunk-15}
 \end{figure}
 \newpage
 10
@@ -453,7 +606,7 @@ rápido e dinâmico
 
 }
 
-\caption{Retile da nuvem em quadrados de 300x300m}\label{fig:unnamed-chunk-14}
+\caption{Retile da nuvem em quadrados de 300x300m}\label{fig:unnamed-chunk-16}
 \end{figure}
 \newpage
 
@@ -471,7 +624,7 @@ rápido e dinâmico
 
 }
 
-\caption{Cálculo das métricas para cada voxel}\label{fig:unnamed-chunk-15}
+\caption{Cálculo das métricas para cada voxel}\label{fig:unnamed-chunk-17}
 \end{figure}
 \newpage
 12
@@ -484,7 +637,7 @@ rápido e dinâmico
 
 }
 
-\caption{Tabela com as métricas escolhidas}\label{fig:unnamed-chunk-16}
+\caption{Tabela com as métricas escolhidas}\label{fig:unnamed-chunk-18}
 \end{figure}
 \newpage
 13
@@ -497,7 +650,7 @@ rápido e dinâmico
 
 }
 
-\caption{Resultado da análise de correlação}\label{fig:unnamed-chunk-17}
+\caption{Resultado da análise de correlação}\label{fig:unnamed-chunk-19}
 \end{figure}
 \newpage
 14
@@ -510,7 +663,7 @@ rápido e dinâmico
 
 }
 
-\caption{nao sei}\label{fig:unnamed-chunk-18}
+\caption{nao sei}\label{fig:unnamed-chunk-20}
 \end{figure}
 \newpage
 15
@@ -540,7 +693,7 @@ parcelas da área (s0)
 
 }
 
-\caption{Esquema TA com Lidar}\label{fig:unnamed-chunk-19}
+\caption{Esquema TA com Lidar}\label{fig:unnamed-chunk-21}
 \end{figure}
 
 Estimativas de pequenas áreas (small area estimation)\\
@@ -580,5 +733,103 @@ não um resultado de um processo estocástico (estudar). (???)\\
 - Na estrutura do Model-dependent approach as parcelas são fixas e
 resultam em um processo estocástico GPT: what is the difference between
 design-based approach and model-dependent approach?
+
+\section{Regressão linear simples}\label{regressuxe3o-linear-simples}
+
+Modelar a relação entre duas variáveis e se expressa na forma de uma
+reta no plano cartesiano.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{IMAGES/eq-base-regressao-linear} 
+
+}
+
+\caption{Equação base da regressão linear simples}\label{fig:unnamed-chunk-22}
+\end{figure}
+
+\begin{itemize}
+\tightlist
+\item
+  \emph{Y = variável resposta ou variável dependente}\\
+\item
+  \emph{X = variável independente, regressora ou explicativa}\\
+\item
+  \emph{Épsilon = erro. Pode ser que a Y seja explicada por X, mas falte
+  algo que explique essa variabilidade. É a flutuação aleatória que
+  ocorre ao tentar explicar Y por X. Seja por imperfeição do modelo,
+  erros na mensuração ou outras variáveis fora de controle.}
+\end{itemize}
+
+\section{Arborimetria preditiva}\label{arborimetria-preditiva}
+
+Em florestas plantadas há grande relação entre o DAP e a altura da
+árvore. O procedimento de medição de campo é o seguinte: 1 - DAP de
+todas as árvores da parcela; 2 - altura total de uma amostra da parcela;
+3 - estima-se a relação entre o DAP e a altura total da amostra; 4 -
+utiliza essa relação para predizer a altura de todas as árvores da
+parcela. A seleção das árvores da amostra pode ser feita de forma
+aleatória ou sistemática. A seleção aleatória garante maior
+confiabilidade, enquanto a sistemática é mais simplificada (ex. 1 árvore
+a cada 15). A *\textbf{relação hipsométrica} é a relação média entre o
+DAP e a altura das árvores individuais. A curva sigmóide é o melhor
+modelo para a relação média entre o DAP e a altura
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.45\linewidth]{IMAGES/modelo-nao-linear} 
+
+}
+
+\caption{Quadro de modelos não lineares (esquerda) e lineares (direita)}\label{fig:unnamed-chunk-23-1}
+\end{figure}
+\begin{figure}
+
+{\centering \includegraphics[width=0.45\linewidth]{IMAGES/modelo-linear} 
+
+}
+
+\caption{Quadro de modelos não lineares (esquerda) e lineares (direita)}\label{fig:unnamed-chunk-23-2}
+\end{figure}
+
+Um modelo é linear quando cada termo é uma constante ou o produto de um
+parâmetro e uma variável preditora. Uma equação linear é construída
+adicionando os resultados para cada termo. Modelos lineares seguem esse
+padrão: Resposta = constante + parâmetro * preditor + \ldots{} +
+parâmetro * preditor. Caso contrário a equação é não-linear.\\
+O postulado de Cotta define que o volume de uma árvore depende do seu
+diâmetro, altura e forma. Todas as árvores de mesmo diâmetro, altura e
+forma possuem o mesmo volume. Isso serve para o lenho de tronco único. O
+fator forma pode ser visto como um índice quantitativo que representa a
+razão entre o volume sólido e cilíndrico de uma árvore. O volume sólido
+de uma amostra da parcela pode ser medido por cubagem rigorosa. O fator
+forma é igual ao somatório dos volumes sólidos dividido pelo somatório
+dos volumes cilíndricos ({[}pi/4{]} * d² * h).\\
+O volume de uma dada árvore é o resultado da multiplicação entre o fator
+de forma e o volume cilíndrico do indivíduo. A seleção das árvores deve
+ser aleatória, sem preocupação em selecionar árvores de todas as classes
+de DAP e altura. \textbf{\emph{Vamos usar o LiDAR TLS para estimar o
+diâmetro e a forma?}}\\
+O volume pode ser calculado em função de diferentes variáveis
+preditoras, como a altura, DAP, altura até a primeira ramificação ou
+outro. Equações de dupla entrada ou equações padrão são aquelas que
+utilizam o DAP e a altura para cálculo do volume.\\
+A relação entre o volume sólido e o volume cilíndrico tende à uma
+relação de proporcionalidade (a curva que os representa passa pela
+origem). Com a adoção do volume comercial, são consideradas as árvores a
+partir de um tal diâmetro, o que afasta a curva da origem e, portanto,
+não evidencia uma relação proporcional.\\
+É possível modelar o fator de forma como uma função do DAP ao invés de
+encontrá-lo a partir da relação entre o DAP e a altura. É adequado para
+quando a forma da árvore muda de acordo com o DAP.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{IMAGES/dupla-entrada-volume} 
+
+}
+
+\caption{Equação base da regressão linear simples}\label{fig:unnamed-chunk-24}
+\end{figure}
 
 \end{document}

@@ -100,10 +100,48 @@ Exemplo prático e definições (https://www.ipef.br/publicacoes/scientia/nr108/
 - O desvio padrão, intervalo de confiança etc são feitos depois  
 
 ``` {r, echo=FALSE, fig.cap='Fluxograma DA e estimador de regressão para VTCC', fig.show='hold', fig.align='center', out.width = "45%"}
-knitr::include_graphics(c("IMAGES/fluxograma-da-lidar-e-campo.jpg","IMAGES/eq-estimador-regressao.png"))
+knitr::include_graphics(c("IMAGES/fluxograma-funcoes.png","IMAGES/eq-estimador-regressao.png"))
+```
+# Processamento da nuvem LiDAR
+
+``` {r, echo=FALSE, fig.cap='Fluxograma do processamento da nuvem LiDAR', fig.align='center', out.width = "80%"}
+knitr::include_graphics("IMAGES/fluxograma-funcoes.png")
 ```
 
-# Fluxograma e etapas Dupla amostragem  
+1. Conferir especificações
+  i. Verificar se a nuvem gerada se enquadra no que é esperado: densidade de pontos, área escaneada, classificação de pontos etc.
+
+2. Arrumar nuvens
+  i. Verificação do sistema de coordenadas utilizado e atributos de latitude, longitude e elevação
+  
+3. Quadricular
+  i. Repartição da nuvem em pedaços menores a fim de ganhar eficiência no processamento em paralelo
+
+4. Definir solo e determinar altura dos pontos
+  i. Assegura e certifica a classificação do solo por diferentes métodos
+  
+5. Classificar outros pontos e ruídos
+  i. Separar os pontos restantes por sua natureza (edificações, corpos d'água etc)
+
+6. Quadrículas limpas
+  i. remoção dos ruídos após classificação
+
+7. Produção de mapas DTM (elevação do solo), DSM (elevação do solo + vegetação) e DEM (elevação da vegetação)
+
+8. Normalização da nuvem
+  i. Joga tudo pro mesmo plano
+
+9. Cálculo de métricas LiDAR
+
+``` {r, echo=FALSE, fig.cap='Esquematização do processo de inventário com ALS e informação terrestre', fig.align='center', out.width = "80%"}
+knitr::include_graphics("IMAGES/als-e-info-campo.png")
+```
+
+  i. 
+  ii. O p90 (percentil 90) representa a altura em que 90% dos pontos da nuvem LiDAR se encontram abaixo desta. Cada quadrícula possui o seu própio p90 e ele tende a apresentar boa correlação com a realidade de campo. A intenção de exisitrem diversas métricas LiDAR é a de ver quais delas possuem boa correlação com os atributos de interesse
+
+\newpage
+## Fluxograma e etapas Dupla amostragem  
 
 ``` {r, echo=FALSE, fig.cap='Fluxograma das etapas de processamento de dados LiDAR para fins de inventário florestal', fig.align='center', out.width = "80%"}
 knitr::include_graphics("IMAGES/fluxogramaDA.png")
@@ -247,3 +285,35 @@ DESIGN-BASED VS MODEL-DEPENDENT APPROACH (ver dps)
 - Na estrutura do Model-dependent approach as parcelas são fixas e resultam em um processo estocástico
 GPT: what is the difference between design-based approach and model-dependent approach?  
 
+# Regressão linear simples  
+Modelar a relação entre duas variáveis e se expressa na forma de uma reta no plano cartesiano.
+
+``` {r, echo=FALSE, fig.cap='Equação base da regressão linear simples', fig.align='center', out.width = "80%"}
+knitr::include_graphics("IMAGES/eq-base-regressao-linear.png")
+```
+- *Y = variável resposta ou variável dependente*  
+- *X = variável independente, regressora ou explicativa*  
+- *Épsilon = erro. Pode ser que a Y seja explicada por X, mas falte algo que explique essa variabilidade. É a flutuação aleatória que ocorre ao tentar explicar Y por X. Seja por imperfeição do modelo, erros na mensuração ou outras variáveis fora de controle.*
+\newpage
+# Arborimetria preditiva
+
+  Em florestas plantadas há grande relação entre o DAP e a altura da árvore. O procedimento de medição de campo é o seguinte: 1 - DAP de todas as árvores da parcela; 2 - altura total de uma amostra da parcela; 3 - estima-se a relação entre o DAP e a altura total da amostra; 4 - utiliza essa relação para predizer a altura de todas as árvores da parcela.
+	A seleção das árvores da amostra pode ser feita de forma aleatória ou sistemática. A seleção aleatória garante maior confiabilidade, enquanto a sistemática é mais simplificada (ex. 1 árvore a cada 15). 
+	A ***relação hipsométrica** é a relação média entre o DAP e a altura das árvores individuais. A curva sigmóide é o melhor modelo para a relação média entre o DAP e a altura
+
+``` {r, echo=FALSE, fig.cap='Quadro de modelos não lineares (esquerda) e lineares (direita)', fig.align='center', out.width = "45%"}
+knitr::include_graphics(c("IMAGES/modelo-nao-linear.jpeg","IMAGES/modelo-linear.jpeg"))
+```
+
+  Um modelo é linear quando cada termo é uma constante ou o produto de um parâmetro e uma variável preditora. Uma equação linear é construída adicionando os resultados para cada termo. Modelos lineares seguem esse padrão: Resposta = constante + parâmetro * preditor + ... + parâmetro * preditor. Caso contrário a equação é não-linear.  
+  O postulado de Cotta define que o volume de uma árvore depende do seu diâmetro, altura e forma. Todas as árvores de mesmo diâmetro, altura e forma possuem o mesmo volume. Isso serve para o lenho de tronco único. O fator forma pode ser visto como um índice quantitativo que representa a razão entre o volume sólido e cilíndrico de uma árvore. O volume sólido de uma amostra da parcela pode ser medido por cubagem rigorosa. O fator forma é igual ao somatório dos volumes sólidos dividido pelo somatório dos volumes cilíndricos ([pi/4] * d² * h).  
+	 O volume de uma dada árvore é o resultado da multiplicação entre o fator de forma e o volume cilíndrico do indivíduo. A seleção das árvores deve ser aleatória, sem preocupação em selecionar árvores de todas as classes de DAP e altura. ***Vamos usar o LiDAR TLS para estimar o diâmetro e a forma?***  
+  O volume pode ser calculado em função de diferentes variáveis preditoras, como a altura, DAP, altura até a primeira ramificação ou outro. Equações de dupla entrada ou equações padrão são aquelas que utilizam o DAP e a altura para cálculo do volume.  
+  A  relação entre o volume sólido e o volume cilíndrico tende à uma relação de proporcionalidade (a curva que os representa passa pela origem). Com a adoção do volume comercial, são consideradas as árvores a partir de um tal diâmetro, o que afasta a curva da origem e, portanto, não evidencia uma relação proporcional.  
+
+``` {r, echo=FALSE, fig.cap='Equação base da regressão linear simples', fig.align='center', out.width = "80%"}
+knitr::include_graphics("IMAGES/dupla-entrada-volume.jpeg")
+```
+
+  É possível modelar o fator de forma como uma função do DAP ao invés de encontrá-lo a partir da relação entre o DAP e a altura. É adequado para quando a forma da árvore muda de acordo com o DAP.
+ ***PAREI NA PG 270***
