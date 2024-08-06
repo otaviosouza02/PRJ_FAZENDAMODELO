@@ -84,11 +84,21 @@ A região foi dividida em 3454 parcelas, onde 2960 delas possuem 400m², enquant
 knitr::include_graphics("IMAGES/parcelasinventariadas.png")
 ```
 \newpage
-# Conceitos e definições da Dupla Amostragem  
+# Dupla Amostragem  
 
-A dupla amostragem é composta por duas fases (s1 e s2)
+A dupla amostragem é composta por duas fases (s1 e s2) - LiDAR  
+
 - s1: compreende uma gama de variáveis explanatórias para cada ponto pertencente a s1. As variáveis explanatórias derivam de informações auxiliares disponíveis em grande quantidade ao longo da área florestal;  
-- s2: constitui o inventário terrestre feito num número limitado de subamostras, onde todas pertencem à s1 e fornecem o valor das variáveis de interesse, ex. densidade local.  
+- s2: constitui o inventário terrestre feito num número limitado de subamostras, onde todas pertencem a s1 e fornecem o valor das variáveis de interesse, ex. densidade local.  
+
+- É importante que s1 tenha uma grande intensidade amostral, de modo a que a média ou o total amostral da medida auxiliar possa ser estimado com precisão, sem erros amostrais. É uma variável barata e que pode ser encontrada em abundância na floresta. Os estimadores de razão e regressão utilizam a relação entre essa variável e a variável de interesse (cara e de difícil medição - VTCC) para garantir melhor precisão ao cálculo.
+
+- O processo: busca-se estimar a média populacional da medida de interesse (ex. em média, quantos m³ de madeira há por hectare?) e obter um indicativo da confiabilidade do cálculo (variância). Para aumentar a precisão da estimativa da média (diminuir a variância), utiliza-se a variável auxiliar que é de fácil observação e está associada à variável de interesse (aqui entra estimador de razão/regressão). Este movimento de redução da variância da média da medida de interesse ocorre de formas diferentes nas DA de ***fase 2 de subamostra (onde todas as parcelas pertencem à fase 1) e fase 2 independente (há sorteio, então nem todas as parcelas inventariadas de forma intensiva fazem parte da fase 1)*** TA CERTO ISSO??? APARENTEMENTE OS DOIS TIPOS DE FASE 2 SE DIVIDEM EM: SORTEIO ALEATORIO DAS AMOSTRAS E ESTRATIFICACAO 
+
+FORMULAS DO CALCULO DAS VARIANCIAS EM CADA TIPO DE FASE 2 ESTÃO NA PG 304
+
+
+
 
 Exemplo prático e definições (https://www.ipef.br/publicacoes/scientia/nr108/cap09.pdf)  
 - O erro amostral (E%) é calculado a partir do desvio padrão S², que representa a variação de uma série de médias retiradas da população  
@@ -99,9 +109,14 @@ Exemplo prático e definições (https://www.ipef.br/publicacoes/scientia/nr108/
 - O estimador de regressão (estudar) do VTCC deve relacionar a(s) variável(eis) auxiliar(es) e também compreende a outros índices (constantes para cada região)  
 - O desvio padrão, intervalo de confiança etc são feitos depois  
 
-``` {r, echo=FALSE, fig.cap='Fluxograma DA e estimador de regressão para VTCC', fig.show='hold', fig.align='center', out.width = "45%"}
-knitr::include_graphics(c("IMAGES/fluxograma-funcoes.png","IMAGES/eq-estimador-regressao.png"))
+``` {r, echo=FALSE, fig.cap='Estimador de regressão para VTCC', fig.align='center', out.width = "60%"}
+knitr::include_graphics("IMAGES/eq-estimador-regressao.png")
 ```
+
+- A amostragem dupla ganha maior precisão pela adoção dos estimadores de razão e regressão e para isso a média ou o total populacional da variável auxiliar deve ser conhecido e sem erro amostral. 
+
+\newpage
+
 # Processamento da nuvem LiDAR
 
 ``` {r, echo=FALSE, fig.cap='Fluxograma do processamento da nuvem LiDAR', fig.align='center', out.width = "80%"}
@@ -132,13 +147,12 @@ knitr::include_graphics("IMAGES/fluxograma-funcoes.png")
   i. Joga tudo pro mesmo plano
 
 9. Cálculo de métricas LiDAR
+  i. 
+  ii. O p90 (percentil 90) representa a altura em que 90% dos pontos da nuvem LiDAR se encontram abaixo desta. Cada quadrícula possui o seu própio p90 e ele tende a apresentar boa correlação com a realidade de campo. A intenção de exisitrem diversas métricas LiDAR é a de ver quais delas possuem boa correlação com os atributos de interesse
 
 ``` {r, echo=FALSE, fig.cap='Esquematização do processo de inventário com ALS e informação terrestre', fig.align='center', out.width = "80%"}
 knitr::include_graphics("IMAGES/als-e-info-campo.png")
 ```
-
-  i. 
-  ii. O p90 (percentil 90) representa a altura em que 90% dos pontos da nuvem LiDAR se encontram abaixo desta. Cada quadrícula possui o seu própio p90 e ele tende a apresentar boa correlação com a realidade de campo. A intenção de exisitrem diversas métricas LiDAR é a de ver quais delas possuem boa correlação com os atributos de interesse
 
 \newpage
 ## Fluxograma e etapas Dupla amostragem  
@@ -266,22 +280,31 @@ knitr::include_graphics("IMAGES/analise-de-regressao.png")
 # Fluxograma e etapas Tripla amostragem
 
 Composta por 3 fases, s0, s1 e s2:  
+
 - O princípio básico é o de que as variáveis explanatórias derivadas das informações auxiliares estão disponíveis em duas frequências diferentes. A fase s0 fornece informações sobre toda a área, enquanto s1 possui dados adicionais de amostras de s0. Logo, a partir da informação terrestre coletada de um número x de parcelas de campo (1 camada de informação) é possível aferir sobre informações adicionais para outras parcelas a partir do uso de preditores (2 camadas de informação) e, por fim, o LiDAR coleta dados sobre todas as parcelas (3 camadas de informação).  
+
 - Logo, a motivação por trás da TA é a de que a gama de informações de s1 adiciona alto poder preditivo às variáveis disponíveis para todas as parcelas da área (s0)  
 
 ``` {r, echo=FALSE, fig.cap='Esquema TA com Lidar', fig.align='center', out.width = "50%"}
 knitr::include_graphics("IMAGES/esquematizacao-TA.png")
 ```
 
-Estimativas de pequenas áreas (small area estimation)  
+**Estimativas de pequenas áreas (small area estimation)**  
+
 - Para sub áreas da floresta onde há pouca informação terrestre, como em G na figura acima. Para essas áreas, o uso da amostragem multifásica pode ser mais eficiente, já que utilizam um número reduzido de parcelas em campo para chegar à mesma precisão da ACE e ACS. Por outro lado, a sub área em questão pode ser pequena demais para justificar a adoção de um modelo de regressão separado, uma vez que este pode resultar em um intervalo de confiança indesejadamente abrangente;  
+
 - A ideia, então, é a de utilizar toda a riqueza de informações presente nas amostras de S2 para ajustar o modelo (equação utilizada para o cálculo de uma variável de interesse) e aplicá-lo para a sub área em questão.  
+
 - O potencial viés que surge da aplicação do modelo na sub área é corrigido pelo uso de modelos residuais empíricos derivados da área amostrada em campo. (não entendi direito essa parte) - trecho no texto:  The potential bias of applying that model in G is then corrected for by using the empirical model residuals derived from that small area.  
+
 - Caso não existam parcelas de campo na sub área, então deve-se aceitar o viés na estimativa e no modelo. São essas as estimativas sintéticas, mas apesar do viés é possível calcular a sua variação.  
 
-DESIGN-BASED VS MODEL-DEPENDENT APPROACH (ver dps)  
+**DESIGN-BASED VS MODEL-DEPENDENT APPROACH (ver dps)**  
+
 - Model-dependent approach: as parcelas amostrais são fixas e as observações retiradas desses locais são assumidas como variáveis aleatórias, assim como a floresta assume o papel de ser o meio realizador desse processo estocástico (?????? o que isso significa?). Embora os locais das parcelas possam ser arbitrariamente escolhidos, o modelo deve escrever adequadamente o processo estocástico, a fim de garantir resultados parciais. (????)  
+
 - Os estimadores do forestinventory se baseiam na design-based approach. Design-based approach baseia-se na randomização dos locais de amostra de forma uniforme e independente. Logo, a floresta por si só e qualquer valor de densidade local de x (pertencente a) F (floresta) são fixos e não um resultado de um processo estocástico (estudar). (???)  
+
 - Na estrutura do Model-dependent approach as parcelas são fixas e resultam em um processo estocástico
 GPT: what is the difference between design-based approach and model-dependent approach?  
 
@@ -294,26 +317,60 @@ knitr::include_graphics("IMAGES/eq-base-regressao-linear.png")
 - *Y = variável resposta ou variável dependente*  
 - *X = variável independente, regressora ou explicativa*  
 - *Épsilon = erro. Pode ser que a Y seja explicada por X, mas falte algo que explique essa variabilidade. É a flutuação aleatória que ocorre ao tentar explicar Y por X. Seja por imperfeição do modelo, erros na mensuração ou outras variáveis fora de controle.*
+
 \newpage
+
 # Arborimetria preditiva
 
-  Em florestas plantadas há grande relação entre o DAP e a altura da árvore. O procedimento de medição de campo é o seguinte: 1 - DAP de todas as árvores da parcela; 2 - altura total de uma amostra da parcela; 3 - estima-se a relação entre o DAP e a altura total da amostra; 4 - utiliza essa relação para predizer a altura de todas as árvores da parcela.
-	A seleção das árvores da amostra pode ser feita de forma aleatória ou sistemática. A seleção aleatória garante maior confiabilidade, enquanto a sistemática é mais simplificada (ex. 1 árvore a cada 15). 
-	A ***relação hipsométrica** é a relação média entre o DAP e a altura das árvores individuais. A curva sigmóide é o melhor modelo para a relação média entre o DAP e a altura
+- Em florestas plantadas há grande relação entre o DAP e a altura da árvore. O procedimento de medição de campo é o seguinte: 1 - DAP de todas as árvores da parcela; 2 - altura total de uma amostra da parcela; 3 - estima-se a relação entre o DAP e a altura total da amostra; 4 - utiliza essa relação para predizer a altura de todas as árvores da parcela.  
+
+- A seleção das árvores da amostra pode ser feita de forma aleatória ou sistemática. A seleção aleatória garante maior confiabilidade, enquanto a sistemática é mais simplificada (ex. 1 árvore a cada 15).  
+
+- A ***relação hipsométrica** é a relação média entre o DAP e a altura das árvores individuais. A curva sigmóide é o melhor modelo para a relação média entre o DAP e a altura.  
 
 ``` {r, echo=FALSE, fig.cap='Quadro de modelos não lineares (esquerda) e lineares (direita)', fig.align='center', out.width = "45%"}
 knitr::include_graphics(c("IMAGES/modelo-nao-linear.jpeg","IMAGES/modelo-linear.jpeg"))
 ```
 
-  Um modelo é linear quando cada termo é uma constante ou o produto de um parâmetro e uma variável preditora. Uma equação linear é construída adicionando os resultados para cada termo. Modelos lineares seguem esse padrão: Resposta = constante + parâmetro * preditor + ... + parâmetro * preditor. Caso contrário a equação é não-linear.  
-  O postulado de Cotta define que o volume de uma árvore depende do seu diâmetro, altura e forma. Todas as árvores de mesmo diâmetro, altura e forma possuem o mesmo volume. Isso serve para o lenho de tronco único. O fator forma pode ser visto como um índice quantitativo que representa a razão entre o volume sólido e cilíndrico de uma árvore. O volume sólido de uma amostra da parcela pode ser medido por cubagem rigorosa. O fator forma é igual ao somatório dos volumes sólidos dividido pelo somatório dos volumes cilíndricos ([pi/4] * d² * h).  
-	 O volume de uma dada árvore é o resultado da multiplicação entre o fator de forma e o volume cilíndrico do indivíduo. A seleção das árvores deve ser aleatória, sem preocupação em selecionar árvores de todas as classes de DAP e altura. ***Vamos usar o LiDAR TLS para estimar o diâmetro e a forma?***  
-  O volume pode ser calculado em função de diferentes variáveis preditoras, como a altura, DAP, altura até a primeira ramificação ou outro. Equações de dupla entrada ou equações padrão são aquelas que utilizam o DAP e a altura para cálculo do volume.  
-  A  relação entre o volume sólido e o volume cilíndrico tende à uma relação de proporcionalidade (a curva que os representa passa pela origem). Com a adoção do volume comercial, são consideradas as árvores a partir de um tal diâmetro, o que afasta a curva da origem e, portanto, não evidencia uma relação proporcional.  
+- Um modelo é linear quando cada termo é uma constante ou o produto de um parâmetro e uma variável preditora. Uma equação linear é construída adicionando os resultados para cada termo. Modelos lineares seguem esse padrão: Resposta = constante + parâmetro * preditor + ... + parâmetro * preditor. Caso contrário a equação é não-linear.  
+
+- O postulado de Cotta define que o volume de uma árvore depende do seu diâmetro, altura e forma. Todas as árvores de mesmo diâmetro, altura e forma possuem o mesmo volume. Isso serve para o lenho de tronco único. O fator forma pode ser visto como um índice quantitativo que representa a razão entre o volume sólido e cilíndrico de uma árvore. O volume sólido de uma amostra da parcela pode ser medido por cubagem rigorosa. O fator forma é igual ao somatório dos volumes sólidos dividido pelo somatório dos volumes cilíndricos ([pi/4] * d² * h).  
+
+- O volume de uma dada árvore é o resultado da multiplicação entre o fator de forma e o volume cilíndrico do indivíduo. A seleção das árvores deve ser aleatória, sem preocupação em selecionar árvores de todas as classes de DAP e altura. ***Vamos usar o LiDAR TLS para estimar o diâmetro e a forma?***  
+
+- O volume pode ser calculado em função de diferentes variáveis preditoras, como a altura, DAP, altura até a primeira ramificação ou outro. Equações de dupla entrada ou equações padrão são aquelas que utilizam o DAP e a altura para cálculo do volume.  
+
+- A  relação entre o volume sólido e o volume cilíndrico tende à uma relação de proporcionalidade (a curva que os representa passa pela origem). Com a adoção do volume comercial, são consideradas as árvores a partir de um tal diâmetro, o que afasta a curva da origem e, portanto, não evidencia uma relação proporcional.  
+
+- É possível modelar o fator de forma como uma função do DAP ao invés de encontrá-lo a partir da relação entre o DAP e a altura. É adequado para quando a forma da árvore muda de acordo com o DAP.  
 
 ``` {r, echo=FALSE, fig.cap='Equação base da regressão linear simples', fig.align='center', out.width = "80%"}
 knitr::include_graphics("IMAGES/dupla-entrada-volume.jpeg")
 ```
 
-  É possível modelar o fator de forma como uma função do DAP ao invés de encontrá-lo a partir da relação entre o DAP e a altura. É adequado para quando a forma da árvore muda de acordo com o DAP.
- ***PAREI NA PG 270***
+\newpage
+
+# Silvimetria com medidas auxiliares
+
+- Medidas de fácil obtenção: densidade de estande e área basal e possuem boa relação com as estimativas de produção (volume). Existem dois tipos de relação entre as medidas auxiliares e as de interesse e resultam em dois estimadores diferentes: estimadores de razão (razão entre a medida de interesse e a auxiliar) e o estimador de regressão (relação entre as duas medidas é uma relação linear simples).  
+
+- Estimador de razão é a razão entre a medida de interesse e a medida auxiliar. A razão pode ser em relação ao total ou às médias das medidas. Ex: saber o total das árvores em vias públicas de uma cidade (caso 1); saber a proporção das vias públicas sombreadas por árvores (caso 2). O primeiro caso se trata de um total - número de árvores na cidade -, o segundo caso envolve a razão entre a área sombreada e área total das vias públicas. O estimador de razão é uma razão das médias, e não uma média das razões.  
+
+$R = \frac{ (1/n)\sum^{n}_{i=1} Yi}{ (1/n)\sum^{n}_{i=1} Xi} = \frac{\sum^{n}_{i=1} Yi}{\sum^{n}_{i=1} Xi} = \frac{Total Y}{Total X}$
+
+- *R* é o estimador de razão
+- *i* indica os arvoredos da amostra *(i = 1, 2, ..., n)*
+- *Yi* é a observação da medida de interesse no arvoredo *i*
+- *Xi* é a observação da medida auxiliar no mesmo arvoredo *i*
+
+- O estimador de razão nada mais é do que a soma das médias da medida de interesse divida pela soma soma das médias da medida auxiliar. é um meio para obter a estimativa da média da variável de interesse com maior precisão. Quanto maior a relação entre a medida de interesse e a medida auxiliar, menor é a soma de quadrados da expressão $\sum(Yi - R * Xi)^2$ ***FORMULA VARIANCIA ESTIMADOR DE RAZAO E FORMULA DA VARIANCIA POPULACIONAL - PG 296***
+
+- O estimador de razão requer o conhecimento da *média* ou do *total populacional* da variável auxiliar, que é um atributo dos arvoredos, a exemplo da densidade de estande e da área basal, o que poderia ser obtido a partir de um censo, descartando erros, mas é caro. O estimador de razão é utilizado nas situações em que a medida de interesse (Y) é diretamente proporcional à medida auxiliar (X). Logo, deve satisfazer 3 condições:  
+1. A relação média entre Y e X é linear: pode ser representada por uma reta;
+2. A reta X-Y passa pela origem do plano cartesiano;
+3. O grau de dispersão dos valores de Y (denota a variância) ao redor da reta é proporcional aos valores de X.  
+
+- O **Estimador de regressão** é utilizado na existência de uma relação linear entre a variável de interesse e a auxiliar, porém a reta que as representa não passa pela origem. Logo, o estimador de regressão possui uma abordagem mais generalista, pois é eficiente mesmo quando as medidas da variável auxiliar e de interesse estão negativamente associadas - inversamente proporcionais.  
+
+
+
