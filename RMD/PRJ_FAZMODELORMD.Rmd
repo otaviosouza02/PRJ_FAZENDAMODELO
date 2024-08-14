@@ -26,6 +26,7 @@ library(mapview)
 library(lidR)
 library(RCSF)
 library(future)
+library(forestinventory)
 ```
 
 ```{r, echo=FALSE, fig.align='center', out.width="40%"}
@@ -275,6 +276,8 @@ A dupla amostragem é composta por duas fases (s1 e s2) - LiDAR
 knitr::include_graphics("IMAGES/eq-estimador-regressao.png")
 ```
 
+\newpage
+
 # Fluxograma e etapas Tripla amostragem
 
 Composta por 3 fases, s0, s1 e s2:  
@@ -370,5 +373,58 @@ $R = \frac{ (1/n)\sum^{n}_{i=1} Yi}{ (1/n)\sum^{n}_{i=1} Xi} = \frac{\sum^{n}_{i
 
 - O **Estimador de regressão** é utilizado na existência de uma relação linear entre a variável de interesse e a auxiliar, porém a reta que as representa não passa pela origem. Logo, o estimador de regressão possui uma abordagem mais generalista, pois é eficiente mesmo quando as medidas da variável auxiliar e de interesse estão negativamente associadas - inversamente proporcionais.  
 
+# R utilizando database grisons
 
+- Para essa etapa será utilzado o database "grisons". A fase s1 é composta por 306 amostras (phase_id_2p) escaneadas com LiDAR e s2 possui 67 subamostras de s1, de onde se calculou o volume com os dados terrestres.
+- Para estimadores globais de dupla amostragem, devemos especificar:  
+1. O modelo de regressão (formula);
+2. O dataframe que possui as informações de inventário;
+3. O objeto de lista (*list*) *phase-id* contendo: o argumento *phase.col* identificando o nome da coluna e especificando para s1 ou s2.
+4. Argumento terrgrid.id, que especifica qual valor numérico indica s2 na coluna.
+5. Opcional: coluna contendo os tamanhos de borda
 
+``` {r, warning=FALSE}
+head(grisons)
+```
+
+- Cria-se um modelo para o cálculo do volume a partir da regressão múltipla da média das alturas (mean), desvio padrão dessa média (stddev), altura máxima (max) e p75 (q75). O modelo retorna a estimativa, a variância externa (variância causada por fatores externos e que não são contemplados pelo modelo - ex. ansiedade do participante ao realizar um teste cognitivo), a variância peso-g (contempla a força de um fator geral para a avaliação sobre os itens medidos. É como se houvessem pesos diferentes para os critérios - lembra uma média ponderada), a quantidade de amostras utilizadas em s1 e s2 e o R² (correlação entre as variáveis). A variância peso-g geralmente é mais preferível. 
+
+``` {r, warning=FALSE}
+reg2p_nex <- twophase(formula = tvol ~ mean + stddev + max + q75, 
+                      data = grisons, phase_id = list(phase.col = "phase_id_2p",
+                      terrgrid.id = 2), boundary_weights = "boundary_weights")
+summary(reg2p_nex)
+```
+
+- O estimador exaustivo pode ser aplicado passando adicionalmente um vetor que contenha as exatas médias das variáveis explanatórias através do argumento *exhaustive*. Este vetor deve ser calculado previamente de tal maneira que qualquer ajuste de borda desejado já tenha sido aplicado. Enquanto um estimador exaustivo utiliza toda a informação disponível no conjunto de dados para gerar a informação, o estimador não-exaustivo, por sua vez, não utiliza toda a informação.
+
+``` {r, warning=FALSE}
+colnames(lm(formula = tvol ~ mean + stddev + max + q75, data = grisons, x = TRUE)$x)
+```
+
+***Não entendi o código acima***
+
+- O estimador exaustivo pode ser aplicado após definir o vetor com as exatas médias, *true.means.Z*:
+
+``` {r, warning=FALSE}
+true.means.Z <- c(1, 11.39, 8.84, 32.68, 18.03)
+reg2p_ex <- twophase(formula = tvol ~ mean + stddev + max + q75,
+                     data = grisons, phase_id = list (phase.col = "phase_id_2p",
+                      terrgrid.id = 2), exhaustive = true.means.Z)
+
+summary(reg2p_ex)
+```
+
+- As variâncias que resultam do cálculo através dos estimador exaustivo são menores do que o valor encontrado pelos estimadores não-exaustivos, uma vez que foram trocadas as médias estimadas das variáveis explanatórias pelas médias reais.
+
+# Anotações do procedimento
+
+- Tenho parcelas no campo; (ok)  
+- Lançar o Grid e identificar quais parcelas estão no campo e quais não estão; (ok)
+- Criar df cruzando informações dos pontos das parcelas com o Grid; (ok)
+- Identificar a idade do inventário em cada pixel;
+- Adicionar métricas LiDAR para cada pixel;
+- Matriz de correlação de Pearson (pode fazer depois, já que no caso vc já sabe quais são as variáveis com maior correlação);
+- Excluir ou adicionar informações para que o df fique com a mesma estrutura do df do artigo;
+- Criar a função do modelo de reg múltipla para cálculo da VTCC, a função sabe quais são as parcelas sem info de campo pelo Id;
+- 

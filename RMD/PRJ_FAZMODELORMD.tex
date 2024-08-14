@@ -37,6 +37,46 @@
 \makeatother
 \usepackage{xcolor}
 \usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 \usepackage{graphicx}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -78,7 +118,7 @@ realizado com o auxílio da tecnologia LiDAR}
 
 \begin{center}\includegraphics[width=0.4\linewidth]{IMAGES/CAPA} \end{center}
 
-\centerline {Piracicaba, SP – Data de Emissão: 08 de agosto de 2024}
+\centerline {Piracicaba, SP – Data de Emissão: 13 de agosto de 2024}
 \newpage
 
 \tableofcontents
@@ -711,6 +751,8 @@ A dupla amostragem é composta por duas fases (s1 e s2) - LiDAR
 \caption{Modelo para cálculo da VTCC}\label{fig:unnamed-chunk-20}
 \end{figure}
 
+\newpage
+
 \section{Fluxograma e etapas Tripla
 amostragem}\label{fluxograma-e-etapas-tripla-amostragem}
 
@@ -986,5 +1028,167 @@ auxiliares}\label{silvimetria-com-medidas-auxiliares}
   mesmo quando as medidas da variável auxiliar e de interesse estão
   negativamente associadas - inversamente proporcionais.
 \end{itemize}
+
+\section{R utilizando database
+grisons}\label{r-utilizando-database-grisons}
+
+\begin{itemize}
+\tightlist
+\item
+  Para essa etapa será utilzado o database ``grisons''. a fase s1 é
+  composta por 306 amostras (phase\_id\_2p) escaneadas com LiDAR e s2
+  possui 67 subamostras de s1, de onde se calculou o volume com os dados
+  terrestres.
+\item
+  Para estimadores globais de dupla amostragem, devemos especificar:\\
+\end{itemize}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  O modelo de regressão (formula);
+\item
+  O dataframe que possui as informações de inventário;
+\item
+  O objeto de lista (list) \emph{phase-id} contendo: o argumento
+  \emph{phase.col} identificando o nome da coluna e especificando para
+  s1 ou s2.
+\item
+  Argumento terrgrid.id, que especificando qual valor numérico indica s2
+  na coluna.
+\item
+  Opcional: coluna contendo os tamanhos de borda
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{head}\NormalTok{(grisons)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   phase_id_2p phase_id_3p boundary_weights      mean    stddev      max
+## 2           1           0        0.8133455 10.263023  7.278974 33.17151
+## 3           1           0        1.0000000 23.351052 11.372732 45.22998
+## 4           1           1        0.8472245  8.259801  5.958564 21.26001
+## 6           1           0        1.0000000 21.563423  7.493390 32.65515
+## 7           1           0        1.0000000 15.751000  8.447083 33.10999
+## 8           1           1        1.0000000 21.160314 13.129320 42.31677
+##        q75 smallarea tvol tvol.3p
+## 2 15.10999         A   NA      NA
+## 3 31.14239         A   NA      NA
+## 4 13.06995         A   NA      NA
+## 6 27.81149         A   NA      NA
+## 7 22.83515         A   NA      NA
+## 8 32.40747         A   NA      NA
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  Cria-se um modelo para o cálculo do volume a partir da regressão
+  múltipla da média das alturas (mean), desvio padrão dessa média
+  (stddev), altura máxima (max) e p75 (q75). O modelo retorna a
+  estimativa, a variância externa (variância causada por fatores
+  externos e que não são contemplados pelo modelo - ex. ansiedade do
+  participante ao realizar um teste cognitivo), a variância peso-g
+  (contempla a força de um fator geral para a avaliação sobre os itens
+  medidos. É como se houvessem pesos diferentes para os critérios -
+  lembra uma média ponderada), a quantidade de amostras utilizadas em s1
+  e s2 e o R² (correlação entre as variáveis). A variância peso-g
+  geralmente é mais preferível.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{reg2p\_nex }\OtherTok{\textless{}{-}} \FunctionTok{twophase}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ tvol }\SpecialCharTok{\textasciitilde{}}\NormalTok{ mean }\SpecialCharTok{+}\NormalTok{ stddev }\SpecialCharTok{+}\NormalTok{ max }\SpecialCharTok{+}\NormalTok{ q75, }
+                      \AttributeTok{data =}\NormalTok{ grisons, }\AttributeTok{phase\_id =} \FunctionTok{list}\NormalTok{(}\AttributeTok{phase.col =} \StringTok{"phase\_id\_2p"}\NormalTok{,}
+                      \AttributeTok{terrgrid.id =} \DecValTok{2}\NormalTok{), }\AttributeTok{boundary\_weights =} \StringTok{"boundary\_weights"}\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(reg2p\_nex)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Two-Phase global estimation
+##  
+## Call: 
+## twophase(formula = tvol ~ mean + stddev + max + q75, data = grisons, 
+##     phase_id = list(phase.col = "phase_id_2p", terrgrid.id = 2), 
+##     boundary_weights = "boundary_weights")
+## 
+## Method used:
+## Non-exhaustive global estimator
+##  
+## Regression Model:
+## tvol ~ mean + stddev + max + q75
+## 
+## Estimation results:
+##  estimate ext_variance g_variance  n1 n2 r.squared
+##  383.5354      279.954   271.5057 306 67 0.6428771
+## 
+## 'boundary_weight'- option was used to calculate weighted means of auxiliary variables
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  O estimador exaustivo pode ser aplicado passando adicionalmente um
+  vetor que contenha as exatas médias das variáveis explanatórias
+  através do argumento \emph{exhaustive}. Este vetor deve ser calculado
+  previamente de tal maneira que qualquer ajuste de borda desejado já
+  tenha sido aplicado.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{colnames}\NormalTok{(}\FunctionTok{lm}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ tvol }\SpecialCharTok{\textasciitilde{}}\NormalTok{ mean }\SpecialCharTok{+}\NormalTok{ stddev }\SpecialCharTok{+}\NormalTok{ max }\SpecialCharTok{+}\NormalTok{ q75, }\AttributeTok{data =}\NormalTok{ grisons, }\AttributeTok{x =} \ConstantTok{TRUE}\NormalTok{)}\SpecialCharTok{$}\NormalTok{x)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "(Intercept)" "mean"        "stddev"      "max"         "q75"
+\end{verbatim}
+
+\textbf{\emph{Não entendi o código acima}}
+
+\begin{itemize}
+\tightlist
+\item
+  O estimador exaustivo pode ser aplicado após definir o vetor com as
+  exatas médias, \emph{true.means.Z}:
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{true.means.Z }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\FloatTok{11.39}\NormalTok{, }\FloatTok{8.84}\NormalTok{, }\FloatTok{32.68}\NormalTok{, }\FloatTok{18.03}\NormalTok{)}
+\NormalTok{reg2p\_ex }\OtherTok{\textless{}{-}} \FunctionTok{twophase}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ tvol }\SpecialCharTok{\textasciitilde{}}\NormalTok{ mean }\SpecialCharTok{+}\NormalTok{ stddev }\SpecialCharTok{+}\NormalTok{ max }\SpecialCharTok{+}\NormalTok{ q75,}
+                     \AttributeTok{data =}\NormalTok{ grisons, }\AttributeTok{phase\_id =} \FunctionTok{list}\NormalTok{ (}\AttributeTok{phase.col =} \StringTok{"phase\_id\_2p"}\NormalTok{,}
+                      \AttributeTok{terrgrid.id =} \DecValTok{2}\NormalTok{), }\AttributeTok{exhaustive =}\NormalTok{ true.means.Z)}
+
+\FunctionTok{summary}\NormalTok{(reg2p\_ex)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Two-Phase global estimation
+##  
+## Call: 
+## twophase(formula = tvol ~ mean + stddev + max + q75, data = grisons, 
+##     phase_id = list(phase.col = "phase_id_2p", terrgrid.id = 2), 
+##     exhaustive = true.means.Z)
+## 
+## Method used:
+## Exhaustive global estimator
+##  
+## Regression Model:
+## tvol ~ mean + stddev + max + q75
+## 
+## Estimation results:
+##  estimate ext_variance g_variance  n1 n2 r.squared
+##  376.7426     202.5602   187.2787 Inf 67 0.6428771
+\end{verbatim}
 
 \end{document}

@@ -69,6 +69,10 @@ if(!require(mapview))             # Package para incluir mapas de fundo
   install.packages("mapview")
 library(mapview)
 
+if(!require(forestinventory))             # Package para incluir mapas de fundo
+  install.packages("forestinventory")
+library(forestinventory)
+
 # devtools::install_github("Jean-Romain/rlas", dependencies=TRUE)
 # devtools::install_github("Jean-Romain/lidR")
 if(!require(lidR))                     # PARA MANPULAÇÃO DE DADOS LiDAR
@@ -90,7 +94,7 @@ library(future)
 # Define pastas e local de trabalho
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 prjNam <- "PRJ_FAZENDAMODELO"                               # Nomeia o projeto
-
+varteste = 0
 dirProjet <- str_c('C:/GitRepo/',prjNam) # Define diretório de trabalho
 if (!dir.exists(dirProjet)) {          # Cria diretório caso não exista
   dir.create('C:/GitRepo/', showWarnings = F)
@@ -396,6 +400,8 @@ opt_output_files(ctg_tile) <-     # Onde guardar as nuvens das parcelas
   str_c(dirParc, "/P_{NUMPARCELA}") # renomeadas pelo respectivo número
 opt_select(ctg_tile) <- "xyz"   # Carrega na memória apenas coordenadas   
 opt_filter(ctg_tile) <- "-drop_z_below 0"     # Ignora pontos com z < 0
+
+par_shp["id"] <- c(2,2,2,2,2,2,2,2,2,2,2,2,2)
 D <- plot_metrics(ctg_tile, .stdmetrics_z, par_shp, radius = 11.28)
 ##plot(D)
 # Escolhe um subgrupo de métricas e dados para estudo da correlação
@@ -403,6 +409,32 @@ D <- plot_metrics(ctg_tile, .stdmetrics_z, par_shp, radius = 11.28)
 X <- tibble(D) %>% select(VTCC, MHDOM, IDINV, zmean, 
                           zq45, zq75, zq95, zpcum2, zpcum4, zpcum6,
                           pzabovezmean, pzabove2)
+
+Xteste <- tibble(D) %>% select(VTCC, id, MHDOM, IDINV, zmean, 
+                          zq45, zq75, zq95, zpcum2, zpcum4, zpcum6,
+                          pzabovezmean, pzabove2)
+aquir
+
+m <- lm(VTCC ~ zq95 + IDINV, data = Xteste)    # Análise de Regressão Linear
+summary(m)                          # Mostra os resultados da regressão
+plot(Xteste$VTCC, predict(m))              # Gráfico de observado vs predito
+abline(0,1)
+
+head(Xteste)
+
+ teste_reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, 
+                     data = Xteste, phase_id = list (phase.col = "id",
+                    terrgrid.id = 2))
+ summary(teste_reg2p_nex)
+ 
+mediazq95 = sum(Xteste$zq95)/13
+mediaidinv = sum(Xteste$IDINV)/13
+
+teste.true.means.Z <- c(1, 24.29965, 4.623077)
+teste_reg2p_ex <- twophase(formula = VTCC ~ zq95 + IDINV,
+                     data = Xteste, phase_id = list (phase.col = "id",
+                      terrgrid.id = 2), exhaustive = teste.true.means.Z)
+summary(teste_reg2p_ex)
 
 # Prepara o gráfico para análise das correlações
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -416,7 +448,7 @@ if (!dir.exists(grfDir)) {                # Cria pasta, caso não exista
 }
 
 fileGrf <- str_c(grfDir, "MatrizDeCorrelacoes.jpg")   # Arq para matriz
-tituGrf <- "Matriz de Correlações de Pearson"        # Define um título
+tituGrf <- "Matriz de Correlacoes de Pearson"        # Define um título
 
 # Abre "impressora" para gerar e salvar o gráfico no formato JPEG
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -490,8 +522,8 @@ for (i in 1:nNuvens) {
   brkL = round((maxL - minL) / 5)            # Legenda com cinco breaks
   intL = c(minL + brkL, minL + 2*brkL, minL + 3*brkL, minL + 4*brkL)
   limL = c(minL, maxL)
-  titulo  <- str_c('Talhão: ', talhao, ' | Métrica: ', interesse, 
-                   ' | Mín: ', minL, ' | Máx: ', maxL)
+  titulo  <- str_c('Talhao: ', talhao, ' | Metrica: ', interesse, 
+                   ' | Min: ', minL, ' | Max: ', maxL)
   p <- ggplot() + geom_spatraster(data = inteRaster, aes()) +
     guides(fill = guide_legend(reverse=F)) +  
     coord_sf(datum=st_crs(31983)) +       # Gráfico numa certa projeção
@@ -501,7 +533,7 @@ for (i in 1:nNuvens) {
   print(p)
   dev.off()                               # Fecha "impressão" do aquivo
 }
-
+teste = 0
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # !!! Método alternativo:
 # Criação de mapas raster para a métrica de interesse (PIXEL HEXAGONAL)
