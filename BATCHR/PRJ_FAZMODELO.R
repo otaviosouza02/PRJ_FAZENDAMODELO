@@ -22,9 +22,6 @@
 # Bibliografia complementar: 
 #  https://github.com/r-lidar/lidR/wiki/Area-based-approach-from-A-to-Z
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rm(list=ls(all=TRUE))                                   # Limpa memória
-gc()
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # 1. Carrega pacotes, organiza pastas e define funções locais
@@ -369,14 +366,14 @@ ctg_gSiN <- readLAScatalog(dirNrm)
 opt_output_files(ctg_gSiN) <-     # Onde guardar as nuvens normalizadas
   str_c(dirTNrm, "/FzMod_{XLEFT}_{YBOTTOM}")    # renomeadas com coords
 opt_chunk_buffer(ctg_gSiN) <- 0     # sem buffers ao redor de cada tile
-opt_chunk_size(ctg_gSiN) <- 300                     # em tiles de 300 m
+opt_chunk_size(ctg_gSiN) <- 100                     # em tiles de 300 m
 opt_laz_compression(ctg_gSiN) <- TRUE              # Mantém formato LAZ
 ctg_tile <- catalog_retile(ctg_gSiN)                        # e executa
 rm(ctg_gNoN, ctg_gSiN, ctg_orig, ctg_talh) # limpa da memória catálogos
 
 # Lê shape e atributos das parcelas p/ acessar parâmetros de interesse
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-shpPar  <- str_c(shpDir, "/Modelo_parcentr.shp")    # shape de parcelas
+shpPar  <- str_c("C:/GitRepo/PRJ_FAZENDAMODELO/SHAPES/Modelo_parcentr.shp")    # shape de parcelas
 par_shp <- st_read(shpPar)
 st_is_valid(par_shp)        # confere se os elementos do shape estão OK
 
@@ -389,8 +386,14 @@ if (!dir.exists(dirParc)) {
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 plot(ctg_tile, mapview = TRUE, map.type = "Esri.WorldImagery")
 plot(ctg_tile)
-plot(tal_shp, add = TRUE, col="black")
-plot(par_shp, add = TRUE, col="white")
+plot(tal_shp)
+plot(par_shp)
+
+# regiao bugada id = 5603
+
+plot(shp_talhoes$id == 5603)
+
+
 
 # Clipa e salva as núvens das parcelas, e calcula
 # métricas para cada "voxel" clipado com o shape de parcelas no tiles
@@ -401,8 +404,19 @@ opt_output_files(ctg_tile) <-     # Onde guardar as nuvens das parcelas
 opt_select(ctg_tile) <- "xyz"   # Carrega na memória apenas coordenadas   
 opt_filter(ctg_tile) <- "-drop_z_below 0"     # Ignora pontos com z < 0
 
-par_shp["id"] <- c(2,2,2,2,2,2,2,2,2,2,2,2,2)
 D <- plot_metrics(ctg_tile, .stdmetrics_z, par_shp, radius = 11.28)
+
+df <- df[-3, ]
+
+df_shp_talhoes <- shp_talhoes[-1593, ]
+D1 <- plot_metrics(ctg_tile, .stdmetrics_z, df_shp_talhoes)
+
+var_boundaryweights <- (D1$AREAPARCEL)/400
+D1$boundaryweights <- var_boundaryweights
+
+Xteste <- tibble(D1) %>% select(Inventario, boundaryweights, MHDOM, IDINV, zmean, 
+                          zq45, zq75, zq95, VTCC, VCCC)
+
 ##plot(D)
 # Escolhe um subgrupo de métricas e dados para estudo da correlação
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,10 +424,21 @@ X <- tibble(D) %>% select(VTCC, MHDOM, IDINV, zmean,
                           zq45, zq75, zq95, zpcum2, zpcum4, zpcum6,
                           pzabovezmean, pzabove2)
 
-Xteste <- tibble(D) %>% select(VTCC, id, MHDOM, IDINV, zmean, 
+Xteste <- tibble(D) %>% select(VTCC, MHDOM, IDINV, zmean, 
                           zq45, zq75, zq95, zpcum2, zpcum4, zpcum6,
                           pzabovezmean, pzabove2)
-aquir
+
+Xteste$Inventario <- as.integer(Xteste$Inventario)
+Xteste$IDINV <- as.numeric(Xteste$IDINV)
+
+# EU POR ALGUM MOTIVO NAO CONSIDEREI AS PARCELAS DE CAMPO COM 3.7 ANOS. O CAMINHO ESTÁ CERTO, MAS HOUVE ESSE ERRO
+
+teste_reg2p_nex <- twophase(formula = VTCC ~ zq75 + zmean, 
+                            data = Xteste, phase_id = list (phase.col = "Inventario",
+                            terrgrid.id = 2), boundary_weights = "boundaryweights")
+summary(teste_reg2p_nex)
+
+class(Xteste$Inventario)
 
 m <- lm(VTCC ~ zq95 + IDINV, data = Xteste)    # Análise de Regressão Linear
 summary(m)                          # Mostra os resultados da regressão
@@ -422,10 +447,7 @@ abline(0,1)
 
 head(Xteste)
 
- teste_reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, 
-                     data = Xteste, phase_id = list (phase.col = "id",
-                    terrgrid.id = 2))
- summary(teste_reg2p_nex)
+
  
 mediazq95 = sum(Xteste$zq95)/13
 mediaidinv = sum(Xteste$IDINV)/13

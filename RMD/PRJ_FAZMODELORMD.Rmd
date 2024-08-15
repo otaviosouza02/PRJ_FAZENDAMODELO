@@ -422,7 +422,7 @@ summary(reg2p_ex)
 - Tenho parcelas no campo; (ok)  
 - Lançar o Grid e identificar quais parcelas estão no campo e quais não estão; (ok)
 - Criar df cruzando informações dos pontos das parcelas com o Grid; (ok)
-- Identificar a idade do inventário em cada pixel;
+- Identificar a idade do inventário em cada pixel; (ok)
 - Adicionar métricas LiDAR para cada pixel;
 - Matriz de correlação de Pearson (pode fazer depois, já que no caso vc já sabe quais são as variáveis com maior correlação);
 - Excluir ou adicionar informações para que o df fique com a mesma estrutura do df do artigo;
