@@ -118,7 +118,7 @@ realizado com o auxílio da tecnologia LiDAR}
 
 \begin{center}\includegraphics[width=0.4\linewidth]{IMAGES/CAPA} \end{center}
 
-\centerline {Piracicaba, SP – Data de Emissão: 13 de agosto de 2024}
+\centerline {Piracicaba, SP – Data de Emissão: 20 de agosto de 2024}
 \newpage
 
 \tableofcontents
@@ -1035,7 +1035,7 @@ grisons}\label{r-utilizando-database-grisons}
 \begin{itemize}
 \tightlist
 \item
-  Para essa etapa será utilzado o database ``grisons''. a fase s1 é
+  Para essa etapa será utilzado o database ``grisons''. A fase s1 é
   composta por 306 amostras (phase\_id\_2p) escaneadas com LiDAR e s2
   possui 67 subamostras de s1, de onde se calculou o volume com os dados
   terrestres.
@@ -1051,12 +1051,12 @@ grisons}\label{r-utilizando-database-grisons}
 \item
   O dataframe que possui as informações de inventário;
 \item
-  O objeto de lista (list) \emph{phase-id} contendo: o argumento
+  O objeto de lista (\emph{list}) \emph{phase-id} contendo: o argumento
   \emph{phase.col} identificando o nome da coluna e especificando para
   s1 ou s2.
 \item
-  Argumento terrgrid.id, que especificando qual valor numérico indica s2
-  na coluna.
+  Argumento terrgrid.id, que especifica qual valor numérico indica s2 na
+  coluna.
 \item
   Opcional: coluna contendo os tamanhos de borda
 \end{enumerate}
@@ -1138,7 +1138,9 @@ grisons}\label{r-utilizando-database-grisons}
   vetor que contenha as exatas médias das variáveis explanatórias
   através do argumento \emph{exhaustive}. Este vetor deve ser calculado
   previamente de tal maneira que qualquer ajuste de borda desejado já
-  tenha sido aplicado.
+  tenha sido aplicado. Enquanto um estimador exaustivo utiliza toda a
+  informação disponível no conjunto de dados para gerar a informação, o
+  estimador não-exaustivo, por sua vez, não utiliza toda a informação.
 \end{itemize}
 
 \begin{Shaded}
@@ -1190,5 +1192,44 @@ grisons}\label{r-utilizando-database-grisons}
 ##  estimate ext_variance g_variance  n1 n2 r.squared
 ##  376.7426     202.5602   187.2787 Inf 67 0.6428771
 \end{verbatim}
+
+\texttt{mean(x)}
+
+\begin{itemize}
+\tightlist
+\item
+  As variâncias que resultam do cálculo através dos estimador exaustivo
+  são menores do que o valor encontrado pelos estimadores
+  não-exaustivos, uma vez que foram trocadas as médias estimadas das
+  variáveis explanatórias pelas médias reais.
+\end{itemize}
+
+\section{Anotações do
+procedimento}\label{anotauxe7uxf5es-do-procedimento}
+
+\begin{itemize}
+\tightlist
+\item
+  Tenho parcelas no campo; (ok)\\
+\item
+  Lançar o Grid e identificar quais parcelas estão no campo e quais não
+  estão; (ok)
+\item
+  Criar df cruzando informações dos pontos das parcelas com o Grid; (ok)
+\item
+  Identificar a idade do inventário em cada pixel; (ok)
+\item
+  Adicionar métricas LiDAR para cada pixel;
+\item
+  Matriz de correlação de Pearson (pode fazer depois, já que no caso vc
+  já sabe quais são as variáveis com maior correlação);
+\item
+  Excluir ou adicionar informações para que o df fique com a mesma
+  estrutura do df do artigo;
+\item
+  Criar a função do modelo de reg múltipla para cálculo da VTCC, a
+  função sabe quais são as parcelas sem info de campo pelo Id;
+\item
+\end{itemize}
 
 \end{document}

@@ -417,14 +417,23 @@ summary(reg2p_ex)
 
 - As variâncias que resultam do cálculo através dos estimador exaustivo são menores do que o valor encontrado pelos estimadores não-exaustivos, uma vez que foram trocadas as médias estimadas das variáveis explanatórias pelas médias reais.
 
-# Anotações do procedimento
+# Resultado
 
-- Tenho parcelas no campo; (ok)  
-- Lançar o Grid e identificar quais parcelas estão no campo e quais não estão; (ok)
-- Criar df cruzando informações dos pontos das parcelas com o Grid; (ok)
-- Identificar a idade do inventário em cada pixel; (ok)
-- Adicionar métricas LiDAR para cada pixel;
-- Matriz de correlação de Pearson (pode fazer depois, já que no caso vc já sabe quais são as variáveis com maior correlação);
-- Excluir ou adicionar informações para que o df fique com a mesma estrutura do df do artigo;
-- Criar a função do modelo de reg múltipla para cálculo da VTCC, a função sabe quais são as parcelas sem info de campo pelo Id;
-- 
+Two-Phase global estimation
+ 
+Call: 
+twophase(formula = VTCC ~ zq95, data = X, phase_id = list(phase.col = "Inventario", 
+    terrgrid.id = 2), boundary_weights = "boundaryweights")
+
+Method used:
+Non-exhaustive global estimator
+ 
+Regression Model:
+VTCC ~ zq95
+
+Estimation results:
+ estimate ext_variance g_variance   n1 n2 r.squared
+ 185.5156     58.22226    259.216 3453  8 0.7322413
+
+'boundary_weight'- option was used to calculate weighted means of auxiliary variables
+

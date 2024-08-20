@@ -366,7 +366,7 @@ ctg_gSiN <- readLAScatalog(dirNrm)
 opt_output_files(ctg_gSiN) <-     # Onde guardar as nuvens normalizadas
   str_c(dirTNrm, "/FzMod_{XLEFT}_{YBOTTOM}")    # renomeadas com coords
 opt_chunk_buffer(ctg_gSiN) <- 0     # sem buffers ao redor de cada tile
-opt_chunk_size(ctg_gSiN) <- 100                     # em tiles de 300 m
+opt_chunk_size(ctg_gSiN) <- 100                     # em tiles de 100 m
 opt_laz_compression(ctg_gSiN) <- TRUE              # Mantém formato LAZ
 ctg_tile <- catalog_retile(ctg_gSiN)                        # e executa
 rm(ctg_gNoN, ctg_gSiN, ctg_orig, ctg_talh) # limpa da memória catálogos
