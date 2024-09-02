@@ -118,7 +118,7 @@ realizado com o auxílio da tecnologia LiDAR}
 
 \begin{center}\includegraphics[width=0.4\linewidth]{IMAGES/CAPA} \end{center}
 
-\centerline {Piracicaba, SP – Data de Emissão: 20 de agosto de 2024}
+\centerline {Piracicaba, SP – Data de Emissão: 02 de setembro de 2024}
 \newpage
 
 \tableofcontents
@@ -1193,8 +1193,6 @@ grisons}\label{r-utilizando-database-grisons}
 ##  376.7426     202.5602   187.2787 Inf 67 0.6428771
 \end{verbatim}
 
-\texttt{mean(x)}
-
 \begin{itemize}
 \tightlist
 \item
@@ -1204,32 +1202,64 @@ grisons}\label{r-utilizando-database-grisons}
   variáveis explanatórias pelas médias reais.
 \end{itemize}
 
-\section{Anotações do
-procedimento}\label{anotauxe7uxf5es-do-procedimento}
+\section{Resultado}\label{resultado}
 
-\begin{itemize}
-\tightlist
+Two-Phase global estimation
+
+Call: twophase(formula = VTCC \textasciitilde{} zq95, data = X,
+phase\_id = list(phase.col = ``Inventario'', terrgrid.id = 2),
+boundary\_weights = ``boundaryweights'')
+
+Method used: Non-exhaustive global estimator
+
+Regression Model: VTCC \textasciitilde{} zq95
+
+Estimation results: estimate ext\_variance g\_variance n1 n2 r.squared
+185.5156 58.22226 259.216 3453 8 0.7322413
+
+`boundary\_weight'- option was used to calculate weighted means of
+auxiliary variables
+
+\section{Estatística de confiança
+(ACS)}\label{estatuxedstica-de-confianuxe7a-acs}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
 \item
-  Tenho parcelas no campo; (ok)\\
+  \texttt{calcCI\ =\ function(err,\ n,\ alpha=.05)}: err é o desvio
+  padrão, n é o número de amostras e alpha é o nível de significância;
+  essa função calcula o IC;
 \item
-  Lançar o Grid e identificar quais parcelas estão no campo e quais não
-  estão; (ok)
+  \texttt{qt(1\ -\ alpha/2,\ n\ -\ 1)\ *\ err:\ 1\ -\ alpha/2} traz um
+  IC de 95\% (2,5\% para cauda superior e 2,5\% para a inferior), n - 1
+  refere-se aos graus de liberdadade e * err faz com que retorne o IC;
 \item
-  Criar df cruzando informações dos pontos das parcelas com o Grid; (ok)
+  \texttt{calcPars\ =\ function(df,\ N,\ alpha=.05)}: df é um data.frame
+  com as informações de MHDOM e VTCC de cada uma das 13 parcelas, N é o
+  número máximo possível de parcelas de campo na área e alpha diz sobre
+  nível de significância do IC;
 \item
-  Identificar a idade do inventário em cada pixel; (ok)
+  \texttt{means\ =\ apply(df,\ 2,\ mean)} calcula a média das colunas de
+  df (MHDOM e VTCC)
 \item
-  Adicionar métricas LiDAR para cada pixel;
+  \texttt{vars\ \ \ =\ apply(df,\ 2,\ function(y)\{(var(y)\ /\ length(y))\ *\ ((N\ -\ length(y))\ /\ N)\})}:
+  Aplica uma função para calcular as variâncias ajustadas em cada uma
+  das colunas de df (MHDOM e VTCC); a fórmula é:
+  \(\frac {var(y)}{lenght(y)} * \frac {N - lenght(y)}{N}\)
 \item
-  Matriz de correlação de Pearson (pode fazer depois, já que no caso vc
-  já sabe quais são as variáveis com maior correlação);
+  \texttt{err\ =\ sqrt(vars)} calcula o desvio padrão com base nas
+  variâncias ajustadas
 \item
-  Excluir ou adicionar informações para que o df fique com a mesma
-  estrutura do df do artigo;
+  \texttt{cis\ =\ calcCI(err,\ nrow(df),\ alpha)} dá os parâmetros para
+  calcCI ser calculada
 \item
-  Criar a função do modelo de reg múltipla para cálculo da VTCC, a
-  função sabe quais são as parcelas sem info de campo pelo Id;
+  \texttt{err\_pc\ =\ 100*cis/means} calcula o erro percentual
 \item
-\end{itemize}
+  Organiza em um data.frame:\\
+  \texttt{out\ =\ rbind(means,\ vars,\ err,\ cis,\ err\_pc,\ nrow(df))\ \%\textgreater{}\%\ as.data.frame}\strut \\
+  \texttt{row.names(out)\ =\ c(\textquotesingle{}media\textquotesingle{},\ \textquotesingle{}var\textquotesingle{},\ \textquotesingle{}dp\textquotesingle{},\ \textquotesingle{}ic\textquotesingle{},\ \textquotesingle{}erro\textquotesingle{},\ \textquotesingle{}n\textquotesingle{})}\strut \\
+  \texttt{names(out)\ =\ names(df)}\strut \\
+  \texttt{return(out)}
+\end{enumerate}
 
 \end{document}

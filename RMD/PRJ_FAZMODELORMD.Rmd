@@ -437,3 +437,29 @@ Estimation results:
 
 'boundary_weight'- option was used to calculate weighted means of auxiliary variables
 
+# Estatística de confiança (ACS)
+
+1. ```calcCI = function(err, n, alpha=.05)```: err é o desvio padrão, n é o número de amostras e alpha é o nível de significância; essa função calcula o IC;
+2. ```qt(1 - alpha/2, n - 1) * err: 1 - alpha/2``` traz um IC de 95% (2,5% para cauda superior e 2,5% para a inferior), n - 1 refere-se aos graus de liberdadade e * err faz com que retorne o IC;  
+3. ```calcPars = function(df, N, alpha=.05)```: df é um data.frame com as informações de MHDOM e VTCC de cada uma das 13 parcelas, N é o número máximo possível de parcelas de campo na área e alpha diz sobre nível de significância do IC;
+4. ```means = apply(df, 2, mean)``` calcula a média das colunas de df (MHDOM e VTCC)
+5. ```vars   = apply(df, 2, function(y){(var(y) / length(y)) * ((N - length(y)) / N)})```: Aplica uma função para calcular as variâncias ajustadas em cada uma das colunas de df (MHDOM e VTCC); a fórmula é:  $\frac {var(y)}{lenght(y)} * \frac {N - lenght(y)}{N}$
+6. ```err = sqrt(vars)``` calcula o desvio padrão com base nas variâncias ajustadas
+7. ```cis = calcCI(err, nrow(df), alpha)``` dá os parâmetros para calcCI ser calculada
+8. ```err_pc = 100*cis/means``` calcula o erro percentual
+9. Organiza em um data.frame:  
+```out = rbind(means, vars, err, cis, err_pc, nrow(df)) %>% as.data.frame```  
+```row.names(out) = c('media', 'var', 'dp', 'ic', 'erro', 'n')```  
+```names(out) = names(df)```  
+```return(out)```
+10. ```tamanhoIdealACS = function(y, N, errDesired=erro/100, alpha=0.05)```: y é o dado de entrada, que pode ser MHDOM ou VTCC, isso é especificado pela variável que o chama; N é o número máximo de parcelas possível; errDesired é o erro que se deseja em porcentagem (se erro = 10, errDesired = 10%); alpha de 0.05 é o valor para IC de 95%
+11. ```B  =  errDesired * mean(y)```: representa o erro absoluto; é a média das VTCC * 0,1 -> é uma constante que representa o valor do erro de 10% em m³ por ha, se passar do valor de B, então o erro é maior do que 10%
+12. ```qt = qt(1 - alpha/2, length(y)-1)```: quantil 97,5% - 95% de confiança para o grau de liberdade delimitado (13 parcelas de campo - 1 = 12)
+13. ```n  = N*var(y)*qt^2 / (N * B^2 + qt^2 * var(y))```: calcula o tamanho ideal de amostra baseando-se na variância de y, no tamanho máx. da pop (N), no limite do erro B e na confiança desejada (95%)
+
+
+
+
+
+
+
