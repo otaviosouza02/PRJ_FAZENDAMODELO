@@ -249,20 +249,21 @@ paramEstatisticosACS %>%
 grupos = c("IDINV")
 
 # Box-plot da variável de interesse por nível de estratificação
-par(mfrow=c( length(grupos), length(variaveisDeInteresse) ))
-attach(parcelas)
-for(i in grupos){
+par(mfrow=c( length(grupos), length(variaveisDeInteresse) )) # 
+attach(parcelas) # faz com que os colunas de parcelas sejam acessadas sem uso de parcelas$coluna, mas tem que usar deattach depois
+for(i in grupos){ ## Bubble sort
   for(j in variaveisDeInteresse){
-    plot( get(i) %>% factor , get(j), main = j, sub=i)
-  }
+    plot( get(i) %>% factor , get(j), main = j, sub=i)  # Para cada item da idade do inventário (dados equivalem à parcelas$IDINV),
+  }                                                     # transforme-os em fator (é assim pra plotar) e faça o plot
+                                                        # de MHDOM e VTCC. O título é j (MHDOM ou VTCC) e o subtítulo é a IDINV
 }
 detach(parcelas)
 
 # Estimativa da população para amostragem estratificada
 popFromStrata = function(factorStrataList){
-  popEstimates = foreach(i = factorStrataList, .combine = 'c') %do% {
-    gpMeans = lapply(i, function(x) x[1,,drop=F]) %>% do.call(what = rbind)
-    gpVars  = lapply(i, function(x) x[2,,drop=F]) %>% do.call(what = rbind)
+  popEstimates = foreach(i = factorStrataList, .combine = 'c') %do% { # Combina os dados em um vetor para cada um dos fatores de estratificação
+    gpMeans = lapply(i, function(x) x[1,,drop=F]) %>% do.call(what = rbind) # Aplica a função X a cada elemento da lista de fatores de estratificação
+    gpVars  = lapply(i, function(x) x[2,,drop=F]) %>% do.call(what = rbind) # rbind os empilha
     cols = 1:(ncol(gpMeans)-4)
     popMean   = apply(gpMeans[,cols], 2, 
                       function(x) sum(x*gpMeans$N) ) /N_ACS
@@ -289,6 +290,10 @@ if(!require(foreach))                         # Para loops inteligentes
   install.packages("foreach")
 library(foreach)
 
+if(!require(magrittr))
+  install.packages("magrittr")
+library(magrittr)
+
 # Cria vetor de (True ou False) para marcar dados que estejam dentro
 #      do intervalo de idades de interesse (entre 2 e 6)
 rightAges = talhoes$IDINV > 2 & talhoes$IDINV < 6
@@ -296,28 +301,28 @@ rightAges = talhoes$IDINV > 2 & talhoes$IDINV < 6
 # Resultados do inventário (estimação + inferência)
 #             pelo método Amostragem Casual Estratificada (ACE)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-paramEstatisticosACE = foreach(
-  grp = grupos, .combine = 'rbind') %:% 
+paramEstatisticosACE = foreach( # Executar linha por linha pode ser didático, mas também pode confundir. O código só realmente funciona com o foreach
+  grp = grupos, .combine = 'rbind') %:%  # Para cada uma das idades (definidas por grupos) os dados serão empilhados em um data.frame (rbind). 
   foreach(
-    niv = parcelas[,grp] %>% unique %>% 
-      as.character %>% sort, .combine = 'rbind'
+    niv = parcelas[,grp] %>% unique %>% # essa , antes do grp é para que a informação fique contida em um vetor numérico. Sem a vírgula, a informação é armazenada em um data.frame. Unique reduz as redundânicas.
+      as.character %>% sort, .combine = 'rbind' # converter para string e organiza em ordem crescente. rbind empilha os resultados
   ) %do% {
-    inGroup = talhoes[,grp] == niv
-    popSize = round(
-      sum(talhoes[rightAges & !is.na(inGroup) & inGroup,]$AREA) / 
+    inGroup = talhoes[,grp] == niv # inGroup recebe TRUE e FALSE. Na primeira volta do foreach o TRUE será 3.7, a segunda volta será o 5.2
+    popSize = round( # Calcula o tamanho da pop. 
+      sum(talhoes[rightAges & !is.na(inGroup) & inGroup,]$AREA) / # Soma as áreas dos talhões onde as idades estão entre 2 e 6 (rightages), além de que a comparação das idades dos talhões (talhoes[,grp]) com o nível (niv) não tenha resultado em NA e onde inGroup esteja indicado como TRUE (talhoes[inGroup,]$AREA retorna as áreas onde a comparação de talhoes com niv deu como verdadeira)
         parcelaAreaMedia)
-    inGroup = parcelas[,grp] == niv
-    tempPars = parcelas[inGroup, variaveisDeInteresse, drop=F]
-    inventory = calcPars(tempPars, popSize)
-    inventory$grupo = grp
-    inventory$nivel = niv
-    inventory$n     = nrow(tempPars)
-    inventory$N     = popSize
+    inGroup = parcelas[,grp] == niv # inGroup classifica como verdadeira ou falsa a comparação da idade da parcela com a idade que niv está recebendo no momento (3.7 ou 5.2)
+    tempPars = parcelas[inGroup, variaveisDeInteresse, drop=F] # Descarta as informações de interesse onde a compração da idade da parcela com a idade de niv são falsas. 
+    inventory = calcPars(tempPars, popSize) # A função calcPars (mesma usada na ACS) recebe MHDOM e VTCC da idade indicada em niv como o df e N é a popSize, calculada acima
+    inventory$grupo = grp # Indica o grupo utilizado na estratificação, no caso IDINV
+    inventory$nivel = niv # indica qual o valor dos estratos (3.7 e 5.2)
+    inventory$n     = nrow(tempPars) # Número de parcelas do estrato
+    inventory$N     = popSize # Número máximo de amostra para o estrato
     return(inventory)
   }
-paramEstatisticosACE %<>% base::split(f=paramEstatisticosACE$grupo) %>%
-  lapply(function(x) split(x, x$nivel))
-globalparamEstatisticosACE = popFromStrata(paramEstatisticosACE)
+paramEstatisticosACE %<>% base::split(f=paramEstatisticosACE$grupo) %>% # %<>% combina o pipe com a atribuição (->). Logo, paramEstatisticosACE irá receber o valor da função seguinte. ::base.split garante que a função split da base R seja executada mesmo que haja outro pacote com uma função split sendo executado. O split separa o resultado dos parâmeteros estatísticos com base no grupo, que é grp, logo, "IDINV"
+  lapply(function(x) split(x, x$nivel)) # Agora separa por nível, que é 3.7 ou 5.2
+globalparamEstatisticosACE = popFromStrata(paramEstatisticosACE) # popFromStrata recebe o data.frame paramEstatisticosACE
 
 # Função para cálculo da intensidade amostral recomendada
 # (ha por parcela) da ACE que garante ~10% de erro (altere se desejar)
@@ -336,7 +341,7 @@ tamanhoIdealACE = function(y, g, Nh, errDesired=erro/100){
 # Calcula o número possível de unidades amostrais (N) por estrato
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 parcPorEstrato <- round(                                           # Nh
-  by(st_area(talhoesComGeo.as), talhoes$IDINV, sum) /
+  by(st_area(st_as_sf(talhoesComGeo)), talhoes$IDINV, sum) /
     (mean(parcelas$AREAPARCEL)), 0)
 IA <- round(AreaTotal/tamanhoIdealACE(y = parcelas$VTCC,
                                       g = parcelas$IDINV, 
@@ -344,7 +349,7 @@ IA <- round(AreaTotal/tamanhoIdealACE(y = parcelas$VTCC,
 
 # Intensidade amostral usada por estrato
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-IAE <- round(by(st_area(talhoesComGeo)/10000, talhoes$IDINV, sum) /
+IAE <- round(by(st_area(st_as_sf(talhoesComGeo))/10000, talhoes$IDINV, sum) /
                (parcelas %>% count(IDINV))[2])[1]
 IAS <- paste0(" usada: 1 parc / ", as.character(IAE) , " ha.")
 
