@@ -389,11 +389,8 @@ plot(ctg_tile)
 plot(tal_shp)
 plot(par_shp)
 
-# regiao bugada id = 5603
-
-plot(shp_talhoes$id == 5603)
-
-
+shp_talhoes_dir = str_c(shpDir, "/Grid_finalizado.shp")
+shp_talhoes = st_read(shp_talhoes_dir)
 
 # Clipa e salva as núvens das parcelas, e calcula
 # métricas para cada "voxel" clipado com o shape de parcelas no tiles
@@ -404,59 +401,87 @@ opt_output_files(ctg_tile) <-     # Onde guardar as nuvens das parcelas
 opt_select(ctg_tile) <- "xyz"   # Carrega na memória apenas coordenadas   
 opt_filter(ctg_tile) <- "-drop_z_below 0"     # Ignora pontos com z < 0
 
-D <- plot_metrics(ctg_tile, .stdmetrics_z, par_shp, radius = 11.28)
+# Seleciona apenas as parcelas em que a área é maior do que 1 m²
+talhoes_final <- shp_talhoes %>%
+  filter_at(vars(AREAPARCEL), all_vars(. >= 1))
 
-df <- df[-3, ]
+metrics_list <- list() # Inicializa uma lista para armazenar as métricas de cada parcela
 
-df_shp_talhoes <- shp_talhoes[-1593, ]
-D1 <- plot_metrics(ctg_tile, .stdmetrics_z, df_shp_talhoes)
+# Loop sobre cada parcela no shapefile
+for (i in 1:nrow(talhoes_final)) { # Para cada número de linhas do data frame que contém as informações 
+  shp_parcela <- talhoes_final[i, ]  # Pegue a i-ésima parcela
+  
+  # Recorte os pontos LiDAR para essa parcela e converta para LAS
+  las_crop <- clip_roi(ctg_tile, shp_parcela)  # Retorna um LAScatalog
+  
+  # Verifique se o retorno é um LAScatalog, e se sim, converta para LAS
+  if (class(las_crop) == "LAScatalog") {
+    # Processa o LAScatalog para obter os pontos LiDAR dentro da parcela
+    las_crop <- readLAS(las_crop)
+  }
+  
+  # Verifique se a parcela contém pontos LiDAR
+  if (!is.null(las_crop)) {
+    # Calcule as métricas para essa parcela
+    metrics <- cloud_metrics(las_crop, func = .stdmetrics_z)
+    
+    # Converta as métricas para um data frame e adicione um identificador da parcela
+    metrics_df <- as.data.frame(t(metrics))  # Transforma as métricas em um data frame com uma linha
+    metrics_df$id <- talhoes_final$id[i]  # Identficador da parcela
+    
+    # Armazene as métricas no data frame
+    metrics_list[[i]] <- metrics_df
+  } else {
+    # Se não houver pontos na parcela, armazene NA
+    metrics_list[[i]] <- data.frame(parcela_id = i, zmean = NA, zmax = NA, zmin = NA)  # Exemplo de colunas
+  }
+}
 
-var_boundaryweights <- (D1$AREAPARCEL)/400
-D1$boundaryweights <- var_boundaryweights
+# Combine todas as métricas em um único data frame
+metrics_df_final <- do.call(rbind, metrics_list)
 
-Xteste <- tibble(D1) %>% select(Inventario, boundaryweights, MHDOM, IDINV, zmean, 
-                          zq45, zq75, zq95, VTCC, VCCC)
+# Fazer o merge das métricas com os dados
+final_df <- merge(talhoes_final, metrics_df_final, by = "id") %>%
+  filter_at(vars(AREAPARCEL), all_vars(. >= 1))
 
-##plot(D)
+#D <- plot_metrics(ctg_tile, .stdmetrics_z, df_shp_talhoes)
+
+var_boundaryweights <- (final_df$AREAPARCEL)/400
+final_df$boundaryweights <- var_boundaryweights
+
 # Escolhe um subgrupo de métricas e dados para estudo da correlação
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-X <- tibble(D) %>% select(VTCC, MHDOM, IDINV, zmean, 
-                          zq45, zq75, zq95, zpcum2, zpcum4, zpcum6,
-                          pzabovezmean, pzabove2)
 
-Xteste <- tibble(D) %>% select(VTCC, MHDOM, IDINV, zmean, 
-                          zq45, zq75, zq95, zpcum2, zpcum4, zpcum6,
-                          pzabovezmean, pzabove2)
+X <- tibble(final_df) %>% select(Inventario, boundaryweights, MHDOM, IDINV, zmean, 
+                          zq45, zq75, zq95, VTCC, VCCC)
 
-Xteste$Inventario <- as.integer(Xteste$Inventario)
-Xteste$IDINV <- as.numeric(Xteste$IDINV)
+X$Inventario <- as.numeric(X$Inventario) # Converter coluna Inventario para Integer (número) - Deve estar em algum formato numérico para ser reconecida pela função twophase()
+X$zq95 <- as.numeric(X$zq95)
+X$IDINV <- as.numeric(X$IDINV)
 
 # EU POR ALGUM MOTIVO NAO CONSIDEREI AS PARCELAS DE CAMPO COM 3.7 ANOS. O CAMINHO ESTÁ CERTO, MAS HOUVE ESSE ERRO
 
-teste_reg2p_nex <- twophase(formula = VTCC ~ zq75 + zmean, 
-                            data = Xteste, phase_id = list (phase.col = "Inventario",
-                            terrgrid.id = 2), boundary_weights = "boundaryweights")
-summary(teste_reg2p_nex)
+class(X) <- as.data.frame(X) # Tibble não é uma função nativa do R, é uma função chamada pelo tidyverse. Dessa forma, o formato da tabela que é gerada não é reconhecido pela função twophase() do package forestinventory. O forestinventory reconhece data frames
 
-class(Xteste$Inventario)
+reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, # formula relaciona os valores de VTCC com zq95 e IDINV
+  data = X, #  Base de dados utilizada
+  phase_id = list(phase.col = "Inventario", terrgrid.id = 2)) # phase_id recebe uma lista em que a coluna a ser analisada é a Inventario e o identificador da segunda fase é 2
+summary(reg2p_nex) # Dá os resultados da Dupla Amostragem
 
-m <- lm(VTCC ~ zq95 + IDINV, data = Xteste)    # Análise de Regressão Linear
+m <- lm(VTCC ~ zq95 + IDINV, data = X)    # Análise de Regressão Linear
 summary(m)                          # Mostra os resultados da regressão
-plot(Xteste$VTCC, predict(m))              # Gráfico de observado vs predito
+VTCCparcelas <- X$VTCC[!is.na(X$VTCC)] # VTCCparcelas recebe os valores não nulos de VTCC contidos em X, ou seja, recebe os valores de VTCC das parcelas de campo
+plot(VTCCparcelas, predict(m))              # Gráfico de observado vs predito
 abline(0,1)
 
-head(Xteste)
+#mediazq95 = sum(Xteste$zq95)/13
+#mediaidinv = sum(Xteste$IDINV)/13
 
-
- 
-mediazq95 = sum(Xteste$zq95)/13
-mediaidinv = sum(Xteste$IDINV)/13
-
-teste.true.means.Z <- c(1, 24.29965, 4.623077)
-teste_reg2p_ex <- twophase(formula = VTCC ~ zq95 + IDINV,
-                     data = Xteste, phase_id = list (phase.col = "id",
-                      terrgrid.id = 2), exhaustive = teste.true.means.Z)
-summary(teste_reg2p_ex)
+#teste.true.means.Z <- c(1, 24.29965, 4.623077)
+#teste_reg2p_ex <- twophase(formula = VTCC ~ zq95 + IDINV,
+#                     data = X, phase_id = list (phase.col = "Inventario",
+#                      terrgrid.id = 2), exhaustive = teste.true.means.Z)
+#summary(teste_reg2p_ex)
 
 # Prepara o gráfico para análise das correlações
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

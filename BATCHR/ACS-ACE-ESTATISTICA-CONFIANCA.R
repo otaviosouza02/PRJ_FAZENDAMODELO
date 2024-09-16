@@ -260,31 +260,30 @@ for(i in grupos){ ## Bubble sort
 detach(parcelas)
 
 # Estimativa da população para amostragem estratificada
-popFromStrata = function(factorStrataList){
-  popEstimates = foreach(i = factorStrataList, .combine = 'c') %do% { # Combina os dados em um vetor para cada um dos fatores de estratificação
-    gpMeans = lapply(i, function(x) x[1,,drop=F]) %>% do.call(what = rbind) # Aplica a função X a cada elemento da lista de fatores de estratificação
-    gpVars  = lapply(i, function(x) x[2,,drop=F]) %>% do.call(what = rbind) # rbind os empilha
-    cols = 1:(ncol(gpMeans)-4)
-    popMean   = apply(gpMeans[,cols], 2, 
-                      function(x) sum(x*gpMeans$N) ) /N_ACS
+popFromStrata = function(factorStrataList){ # factorStrataList apresenta as estimativas de VTCC e MHDOM para cada uma das idades e o resultado da análise de confiança para cada uma
+  popEstimates = foreach(i = paramEstatisticosACE, .combine = 'c') %do% { # Combina os dados em um vetor para cada um dos fatores de estratificação
+    gpMeans = lapply(i, function(x) x[1,,drop=F]) %>% do.call(what = rbind) # a função lapply seleciona a primeira linha de cada um dos data.frames(paramEstatisticosACE$IDINV$`3.7 ou 5.2`). do.call(what = 'rbind) unifica a resposta em um único data.frame, sem o argumento a respota seria dada em dois df diferentes, sendo um para cada idade
+    gpVars  = lapply(i, function(x) x[2,,drop=F]) %>% do.call(what = rbind) # seleciona a segunda linha (variâncias) para cada idade
+    cols = 1:(ncol(gpMeans)-4) # cols é um vetor onde o número de casas é resultado do número de colunas de gpMeans - 4. Como gpMeans tem 6 colunas, cols é um vetor de duas casas
+    popMean   = apply(gpMeans[,cols], 2, # [,cols] faz com que sejam selecionados os índices 1 e 2 de gpMeans, que no caso são as infos de MHDOM e VTCC para cada uma das idades. , 2 indica que a função a seguir será aplicada nas colunas do data.frame gpMeans. A resposta é a média ponderada de MHDOM e VTCC da população, ou seja, unificou as informações e já não mais as separa por estrato
+                      function(x) sum(x*gpMeans$N) ) /N_ACS # Faz a média ponderada usando o MHDOM ou VTCC multiplicado pelo N (número máxímo de amostras para cada estrato). O resultado é dividido pelo número máximo de amostra da população domo um todo, unificando as idades. Retorna a média das estimativas de VTCC e MHDOM da população
     popVar    = apply(gpVars[,cols], 2, 
-                      function(x) sum( x * (gpVars$N/N_ACS)^2 ) )
-    popStdErr = sqrt(popVar)
-    popCI     = calcCI(popStdErr, sum(gpMeans$n))
+                      function(x) sum( x * (gpVars$N/N_ACS)^2 ) ) # Mesmo procedimento, mas aqui retorna a variância de MHDOM e VTCC na população
+    popStdErr = sqrt(popVar) # Calcula o desvio padrão de MHDOM e VTCC da população (não é para cada idade)
+    popCI     = calcCI(popStdErr, sum(gpMeans$n)) # calcCI (calcula o IC para 95% de confiança) recebe o desvio padrão e o tamanho da amostra (n é o tamanho da amostra de 3.7 somado com o tamanho da amostra de 5.2)
     popPars = data.frame(
-      media = popMean,
-      var   = popVar,
-      dp    = popStdErr,
-      ic    = popCI,
-      erro  = 100 * popCI / popMean,
-      n     = sum( sapply(i, function(x) mean(x$n)) )
+      media = popMean, # Coluna média do df recebe a média das estimativas de MHDOM e VTCC da população
+      var   = popVar, # Coluna var recebe a variância da população para cada variável de interesse (MHDOM e VTCC)
+      dp    = popStdErr, # Coluna dp recebe o desvio padrão da população para cada variável de interesse (MHDOM e VTCC)
+      ic    = popCI, # Coluna ic recebe o intervalo de confiança da população para cada variável de interesse (MHDOM e VTCC)
+      erro  = 100 * popCI / popMean, # # Coluna erro recebe o erro (%) da população para cada estimativa das variáveis de interesse (MHDOM e VTCC)
+      n     = sum( sapply(i, function(x) mean(x$n)) ) # Coluna n recebe o tamanho da amostra da população
     )
     return(list(popPars))
   }
   names(popEstimates) = names(factorStrataList)
   return(popEstimates)
 }
-
 
 if(!require(foreach))                         # Para loops inteligentes
   install.packages("foreach")
@@ -322,17 +321,19 @@ paramEstatisticosACE = foreach( # Executar linha por linha pode ser didático, m
   }
 paramEstatisticosACE %<>% base::split(f=paramEstatisticosACE$grupo) %>% # %<>% combina o pipe com a atribuição (->). Logo, paramEstatisticosACE irá receber o valor da função seguinte. ::base.split garante que a função split da base R seja executada mesmo que haja outro pacote com uma função split sendo executado. O split separa o resultado dos parâmeteros estatísticos com base no grupo, que é grp, logo, "IDINV"
   lapply(function(x) split(x, x$nivel)) # Agora separa por nível, que é 3.7 ou 5.2
-globalparamEstatisticosACE = popFromStrata(paramEstatisticosACE) # popFromStrata recebe o data.frame paramEstatisticosACE
+globalparamEstatisticosACE = popFromStrata(paramEstatisticosACE) # popFromStrata recebe o data.frame paramEstatisticosACE e retorna as estatísticas de confiança da média ponderada das estimativas de MHDOM e VTCC
+
+
 
 # Função para cálculo da intensidade amostral recomendada
 # (ha por parcela) da ACE que garante ~10% de erro (altere se desejar)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 erro <- 10
-tamanhoIdealACE = function(y, g, Nh, errDesired=erro/100){
-  vars = by(y, g, stats::var)
-  Wh   = by(y, g, length) / length(y)
-  Nh   = Nh[ names(Nh) %in% g ]
-  B    = errDesired * mean(y)
+tamanhoIdealACE = function(y, g, Nh, errDesired=erro/100){ # y contém os VTCC das parcelas de campo, g contém as IDINV das parcelas de campo e Nh apresenta o número máximo de parcelas amostrais para cada uma das idades
+  vars = by(y, g, stats::var) # BY() Executa uma função em subconjuntos de um objeto (no caso, data.frame). Sintaxe: by(dado, subconjunto, função). var calcula a variância. Logo, vars recebe a variância dos VTCC das parcelas de campo para cada classe de idade
+  Wh   = by(y, g, length) / length(y) # Seleciona a quantidade de parcelas existente para cada uma das idades e divide pelo total das parcelas. Wh é uma representação percentual do quanto cada grupo de parcelas (separadas por idade) representam do total das parcelas de campo.
+  Nh   = Nh[ names(Nh) %in% g ] # A operação entre colchetes é uma comparação. Nela é verificado se as idades contidas na variável parcPorEstrato, que agrupa as idades e o número máximo de parcelas amostrais de cada talhão, de fato existem no data.frame "parcelas", retornando True ou False. Caso True, Nh receberá o número máximo de parcelas amostrais para cada idade
+  B    = errDesired * mean(y) # B recebe 10% do valor médio das VTCC e não segrega por idade. Esse valor é tido como o erro aceitável em m³ por ha
   n    = sum( Nh^2 * vars / Wh ) / 
     ((B^2 * (sum(Nh)^2))/4 + sum(Nh * vars))
   return(n)
@@ -349,9 +350,15 @@ IA <- round(AreaTotal/tamanhoIdealACE(y = parcelas$VTCC,
 
 # Intensidade amostral usada por estrato
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-IAE <- round(by(st_area(st_as_sf(talhoesComGeo))/10000, talhoes$IDINV, sum) /
-               (parcelas %>% count(IDINV))[2])[1]
-IAS <- paste0(" usada: 1 parc / ", as.character(IAE) , " ha.")
+IAE <- round(by(st_area(st_as_sf(talhoesComGeo))/10000, talhoes$IDINV, sum) / # Agrupa os talhões por idades e soma as suas áreas em ha. O resultado é divido pelo número de parcelas existente para cada idade
+               (parcelas %>% count(IDINV))[2])[1] # IAE recebe a intensidade amostral usaada em cada estrato
+
+                                    ##############################
+                                    ## OTIMIZAR TODA ESSA PARTE ##
+                                    ##############################
+
+IAS <- paste0(" Em 3.7 anos, usada: 1 parc / ", as.character(IAE[nrow(IAE) - 1, nrow(IAE) - 1]) , " ha.")
+IAS1 <- paste0(" Em 5.2 anos, usada: 1 parc / ", as.character(IAE[nrow(IAE), nrow(IAE) - 1]) , " ha.")
 
 # Intensidade amostral que seria necessária para ACE
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -359,7 +366,9 @@ erroTexto <- as.character(erro)
 IAI <- paste0("\n Necessárias p/ erro de ", erroTexto, 
               "%: 1 parc / ", IA, " ha.")
 
-NotaDeRodape <- paste0(IAS, IAI)
+# Erro está até acima de 10%, então eu não poderia diminuir a minha intensidade amostral como mostra a tabela
+
+NotaDeRodape <- paste0(IAS, IAS1, IAI)
 globalparamEstatisticosACE[[grupos]] %>% t %>%  # transpõe o data frame
   kbl(caption = paste0("Amostragem Casual Estratificada (ACE)"),
       align = "r") %>%
