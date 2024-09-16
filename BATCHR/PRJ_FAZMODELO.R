@@ -401,6 +401,12 @@ opt_output_files(ctg_tile) <-     # Onde guardar as nuvens das parcelas
 opt_select(ctg_tile) <- "xyz"   # Carrega na memória apenas coordenadas   
 opt_filter(ctg_tile) <- "-drop_z_below 0"     # Ignora pontos com z < 0
 
+# FIM DO PROCESSAMENTO DE NUVEM
+
+
+
+# BLOCO DESTINADO A ORGANIZAÇÃO DOS DADOS PARA A FUNÇÃO TWOPHASE()
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Seleciona apenas as parcelas em que a área é maior do que 1 m²
 talhoes_final <- shp_talhoes %>%
   filter_at(vars(AREAPARCEL), all_vars(. >= 1))
@@ -446,6 +452,7 @@ final_df <- merge(talhoes_final, metrics_df_final, by = "id") %>%
 
 #D <- plot_metrics(ctg_tile, .stdmetrics_z, df_shp_talhoes)
 
+# Cálculo do boundary weights
 var_boundaryweights <- (final_df$AREAPARCEL)/400
 final_df$boundaryweights <- var_boundaryweights
 
@@ -459,9 +466,7 @@ X$Inventario <- as.numeric(X$Inventario) # Converter coluna Inventario para Inte
 X$zq95 <- as.numeric(X$zq95)
 X$IDINV <- as.numeric(X$IDINV)
 
-# EU POR ALGUM MOTIVO NAO CONSIDEREI AS PARCELAS DE CAMPO COM 3.7 ANOS. O CAMINHO ESTÁ CERTO, MAS HOUVE ESSE ERRO
-
-class(X) <- as.data.frame(X) # Tibble não é uma função nativa do R, é uma função chamada pelo tidyverse. Dessa forma, o formato da tabela que é gerada não é reconhecido pela função twophase() do package forestinventory. O forestinventory reconhece data frames
+X <- as.data.frame(X) # Tibble não é uma função nativa do R, é uma função chamada pelo tidyverse. Dessa forma, o formato da tabela que é gerada não é reconhecido pela função twophase() do package forestinventory. O forestinventory reconhece data frames
 
 reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, # formula relaciona os valores de VTCC com zq95 e IDINV
   data = X, #  Base de dados utilizada
