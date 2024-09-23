@@ -34,6 +34,10 @@ if(!require(sf))            # Para manipulação de shapes e outros tipos
   install.packages("sf")                      # de dados espacializados 
 library(sf)
 
+if(!require(foreach))
+  install.packages("foreach")
+library(foreach)
+
 if(!require(tidyterra))           # Package para processar mapas raster
   install.packages("tidyterra")
 library(tidyterra)
@@ -450,8 +454,6 @@ metrics_df_final <- do.call(rbind, metrics_list)
 final_df <- merge(talhoes_final, metrics_df_final, by = "id") %>%
   filter_at(vars(AREAPARCEL), all_vars(. >= 1))
 
-#D <- plot_metrics(ctg_tile, .stdmetrics_z, df_shp_talhoes)
-
 # Cálculo do boundary weights
 var_boundaryweights <- (final_df$AREAPARCEL)/400
 final_df$boundaryweights <- var_boundaryweights
@@ -464,29 +466,87 @@ X <- tibble(final_df) %>% select(Inventario, boundaryweights, MHDOM, IDINV, zmea
 
 X$Inventario <- as.numeric(X$Inventario) # Converter coluna Inventario para Integer (número) - Deve estar em algum formato numérico para ser reconecida pela função twophase()
 X$zq95 <- as.numeric(X$zq95)
-X$IDINV <- as.numeric(X$IDINV)
+X$zq45 <- as.numeric(X$zq45)
+X$zq75 <- as.numeric(X$zq75)
+X$zmean <- as.numeric(X$zmean)
+#### VER SE É NECESSÁRIO FZR TD ISSO DE CONVERSAO
+X <- as.data.frame(X) # Tibble não é uma função nativa do R, é uma função chamada pelo tidyverse. Dessa forma, o formato da tabela que é gerada não é reconhecido pela função twophase() do package forestinventory. O forestinventory reconhece data frames, já que são nativos do R.
 
-X <- as.data.frame(X) # Tibble não é uma função nativa do R, é uma função chamada pelo tidyverse. Dessa forma, o formato da tabela que é gerada não é reconhecido pela função twophase() do package forestinventory. O forestinventory reconhece data frames
 
-reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, # formula relaciona os valores de VTCC com zq95 e IDINV
-  data = X, #  Base de dados utilizada
-  phase_id = list(phase.col = "Inventario", terrgrid.id = 2)) # phase_id recebe uma lista em que a coluna a ser analisada é a Inventario e o identificador da segunda fase é 2
-summary(reg2p_nex) # Dá os resultados da Dupla Amostragem
-
+# Análise de regressão linear para verificar a correlação
+# entre o p95 e a idade do inventário com o VTCC
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 m <- lm(VTCC ~ zq95 + IDINV, data = X)    # Análise de Regressão Linear
 summary(m)                          # Mostra os resultados da regressão
 VTCCparcelas <- X$VTCC[!is.na(X$VTCC)] # VTCCparcelas recebe os valores não nulos de VTCC contidos em X, ou seja, recebe os valores de VTCC das parcelas de campo
 plot(VTCCparcelas, predict(m))              # Gráfico de observado vs predito
 abline(0,1)
 
-#mediazq95 = sum(Xteste$zq95)/13
-#mediaidinv = sum(Xteste$IDINV)/13
+# Retorna a estimativa e as inferências a partir da ACS
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+op_ACS <- onephase(formula = VTCC~1, data = X,
+               phase_id =list(phase.col = "Inventario",terrgrid.id = 2))
+summary(op_ACS)
+confint(op_ACS)
 
-#teste.true.means.Z <- c(1, 24.29965, 4.623077)
-#teste_reg2p_ex <- twophase(formula = VTCC ~ zq95 + IDINV,
-#                     data = X, phase_id = list (phase.col = "Inventario",
-#                      terrgrid.id = 2), exhaustive = teste.true.means.Z)
-#summary(teste_reg2p_ex)
+# Retorna a estimativa e as inferências a partir da ACE
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+op_ACE <- onephase(formula = VTCC~1, data = X,
+                   phase_id =list(phase.col = "Inventario",terrgrid.id = 2),
+                   area = list(sa.col = "IDINV", areas = c("3.7", "5.2")))
+summary(op_ACE)
+confint(op_ACE)
+
+# Unifica as estimativas e as inferências obtidas 
+# por estrato na ACE para toda a área 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+VTCCponderadaACE = c()
+areaTotal = sum(talhoes$AREA)
+foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
+  VTCCponderadaACE[i] = ((sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]))/areaTotal)*(op_ACE$estimation$estimate[op_ACE$estimation$area == idadesEstratos[i]])
+}
+VTCCponderadaACE_final = sum(VTCCponderadaACE)
+
+VarponderadaACE = c()
+foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
+  VarponderadaACE[i] = (((sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]))/areaTotal)^2)*(op_ACE$estimation$variance[op_ACE$estimation$area == idadesEstratos[i]])
+}
+VarponderadaACE_final = sum(VarponderadaACE)
+
+calcCI = function(err, n, alpha=.05){ # err = desvio padrão, n = tamanho da amostra e alpha = nível de significância (95% de confiança)
+  return(
+    qt(1 - alpha/2, n-1) * err # Calcula o quantil da distribuição de t de Student para o nível de liberdade desejado. Multiplica pelo erro para obter o intervalo de confiança
+  ) # retorno do ic
+}
+
+erroPadrao_ponderadoACE = sqrt(VarponderadaACE_final)
+numeroAmostras = sum(op_ACE$estimation$n2)
+intervaloConfiancaACE = calcCI(erroPadrao_ponderadoACE, numeroAmostras)
+
+# Resultados finais da ACE:
+VTCCponderada_final
+VarponderadaACE_final
+erroPadrao_ponderadoACE
+intervaloConfiancaACE
+
+# Retorna a estimativa e as inferências a partir da Dupla Amostragem
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, # formula relaciona os valores de VTCC com zq95 e IDINV
+  data = X, #  Base de dados utilizada
+  phase_id = list(phase.col = "Inventario", terrgrid.id = 2)) # phase_id recebe uma lista em que a coluna a ser analisada é a "Inventario" e o identificador da segunda fase é 2
+summary(reg2p_nex) # Dá os resultados da Dupla Amostragem
+confint(reg2p_nex) # Estatística de confiança
+
+# estudar pq unbiased é FALSE
+reg2p_nex_est = twophase(
+  formula = VTCC ~ zq95 + IDINV,
+  data = X,
+  phase_id =list(phase.col = "Inventario", terrgrid.id = 2),
+  small_area = list(sa.col = "IDINV", areas = c("3.7", "5.2"), unbiased = FALSE))
+summary(reg2p_nex_est)
+
+# FAZER A PARTE DAS MEDIAS PONDERADAS
+
 
 # Prepara o gráfico para análise das correlações
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

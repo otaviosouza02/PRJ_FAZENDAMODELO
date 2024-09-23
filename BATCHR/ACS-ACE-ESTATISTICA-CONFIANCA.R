@@ -201,6 +201,10 @@ df <- parcelas %>% select(all_of(variaveisDeInteresse))
 parcelaAreaMedia <- mean(parcelas$AREAPARCEL) / 10000          # quantidade de parcelas de campo por ha com base na média de suas áreas
 N_ACS <- round(AreaTotal / parcelaAreaMedia , 0)    # N = número máximo de parcelas possível
 
+sum(talhoes$AREA[talhoes$IDINV == '3.7'])/3
+sum(talhoes$AREA[talhoes$IDINV == '5.2'])/3
+AreaTotal
+
 # Resultados do inventário (estimação + inferência)
 #             pelo método Amostragem Casual Simples (ACS)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -282,7 +286,7 @@ popFromStrata = function(factorStrataList){ # factorStrataList apresenta as esti
     return(list(popPars))
   }
   names(popEstimates) = names(factorStrataList)
-  return(popEstimates)
+  return(popEstimates) # IC já é de 95%
 }
 
 if(!require(foreach))                         # Para loops inteligentes
@@ -328,13 +332,13 @@ globalparamEstatisticosACE = popFromStrata(paramEstatisticosACE) # popFromStrata
 # Função para cálculo da intensidade amostral recomendada
 # (ha por parcela) da ACE que garante ~10% de erro (altere se desejar)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-erro <- 10
+erro <- 5
 tamanhoIdealACE = function(y, g, Nh, errDesired=erro/100){ # y contém os VTCC das parcelas de campo, g contém as IDINV das parcelas de campo e Nh apresenta o número máximo de parcelas amostrais para cada uma das idades
   vars = by(y, g, stats::var) # BY() Executa uma função em subconjuntos de um objeto (no caso, data.frame). Sintaxe: by(dado, subconjunto, função). var calcula a variância. Logo, vars recebe a variância dos VTCC das parcelas de campo para cada classe de idade
   Wh   = by(y, g, length) / length(y) # Seleciona a quantidade de parcelas existente para cada uma das idades e divide pelo total das parcelas. Wh é uma representação percentual do quanto cada grupo de parcelas (separadas por idade) representam do total das parcelas de campo.
   Nh   = Nh[ names(Nh) %in% g ] # A operação entre colchetes é uma comparação. Nela é verificado se as idades contidas na variável parcPorEstrato, que agrupa as idades e o número máximo de parcelas amostrais de cada talhão, de fato existem no data.frame "parcelas", retornando True ou False. Caso True, Nh receberá o número máximo de parcelas amostrais para cada idade
   B    = errDesired * mean(y) # B recebe 10% do valor médio das VTCC e não segrega por idade. Esse valor é tido como o erro aceitável em m³ por ha
-  n    = sum( Nh^2 * vars / Wh ) / 
+  n    = sum( (Nh^2 * vars) / Wh ) / 
     ((B^2 * (sum(Nh)^2))/4 + sum(Nh * vars))
   return(n)
 }
@@ -346,12 +350,12 @@ parcPorEstrato <- round(                                           # Nh
     (mean(parcelas$AREAPARCEL)), 0)
 IA <- round(AreaTotal/tamanhoIdealACE(y = parcelas$VTCC,
                                       g = parcelas$IDINV, 
-                                      Nh = parcPorEstrato), 0)
+                                      Nh = parcPorEstrato), 2)
 
 # Intensidade amostral usada por estrato
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 IAE <- round(by(st_area(st_as_sf(talhoesComGeo))/10000, talhoes$IDINV, sum) / # Agrupa os talhões por idades e soma as suas áreas em ha. O resultado é divido pelo número de parcelas existente para cada idade
-               (parcelas %>% count(IDINV))[2])[1] # IAE recebe a intensidade amostral usaada em cada estrato
+               (parcelas %>% count(IDINV))[2], 2)[1] # IAE recebe a intensidade amostral usaada em cada estrato
 
                                     ##############################
                                     ## OTIMIZAR TODA ESSA PARTE ##
