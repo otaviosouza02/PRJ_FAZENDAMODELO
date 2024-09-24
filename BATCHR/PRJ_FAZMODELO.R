@@ -30,6 +30,14 @@ if(!require(tidyverse))    # Para melhor manipulação de dados e funções
   install.packages("tidyverse")
 library(tidyverse)
 
+if(!require(ggplot2))
+  install.packages("ggplot2")
+library(ggplot2)
+
+if(!require(ggpubr))
+  install.packages("ggpubr")
+library(ggpubr)
+
 if(!require(sf))            # Para manipulação de shapes e outros tipos
   install.packages("sf")                      # de dados espacializados 
 library(sf)
@@ -115,108 +123,11 @@ if (!dir.exists(lidDir)) {
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Este bloco cria funções que permitem produzir gráficos esteticamente
-# caprichados para apresentar os índices de correlação de Pearson
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Parâmetros dos gráficos  
-txt.size = 6
-thm.size = (14/5) * txt.size
-
-Tema <- theme(
-  axis.line    = element_line(size = .5, colour = "black"),
-  axis.text.x  = element_text(angle = 45, size = thm.size, vjust = 1, hjust = 1),
-  axis.title.y = element_blank(),
-  axis.text.y  = element_text(angle = 45, size = thm.size),
-  axis.ticks   = element_blank(),
-  legend.justification = c(1, 0),
-  legend.position  = c(1, 0.5),
-  legend.text      = element_text(size = 12, colour="black"),
-  legend.title = element_blank(),
-  panel.border     = element_blank(),
-  panel.background = element_blank(),
-  panel.grid.major = element_line(colour = "grey"),
-  title = element_text(size = thm.size, colour="black", face="bold"),
-  plot.background = element_rect(colour = "black", fill=NA, size=1)
-) 
-
-# Função para reordenamento da cormat (correlation matrix)
-reorder_cormat <- function(cormat){
-  # Use correlation between variables as distance
-  dd <- as.dist((1-cormat)/2)
-  hc <- hclust(dd)
-  cormat <-cormat[hc$order, hc$order]
-}
-
-# Função para definição do triângulo superior da cormat
-get_upper_tri <- function(cormat){
-  cormat[lower.tri(cormat)]<- NA
-  return(cormat)
-}
-
-# Função para embelazamento da cormat
-graphCormat <- function(cormat){
-  # Resets font size for correlation matrix graph
-  txt.size = 6
-  thm.size = (14/5) * txt.size
-  upper_tri <- get_upper_tri(cormat)
-  # Melt the correlation matrix
-  melted_cormat <- melt(upper_tri, na.rm = TRUE)
-  p <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
-    geom_tile(color = "white")+
-    scale_fill_gradient2(low = "blue", high = "red", mid = "white",
-                         midpoint = 0, limit = c(-1,1), space = "Lab", 
-                         name="Pearson\nCorrelation") +
-    coord_fixed() +
-    geom_text(aes(Var2, Var1, label = value), color = "black", size = 0.7*txt.size) +
-    theme(
-      axis.line    = element_line(size = .5, colour = "black"),
-      axis.title.x = element_blank(),
-      axis.text.x  = element_text(angle = 45, size = thm.size, vjust = 1, hjust = 1),
-      axis.title.y = element_blank(),
-      axis.text.y  = element_text(angle = 45, size = thm.size),
-      axis.ticks   = element_blank(),
-      legend.direction = "horizontal",
-      legend.justification = c(1, 0),
-      legend.position  = c(0.6, 0.7),
-      legend.text      = element_text(size = 12, colour="black"),
-      panel.border     = element_blank(),
-      panel.background = element_blank(),
-      panel.grid.major = element_line(colour = "grey"),
-      title = element_text(size = thm.size, colour="black", face="bold"),
-      plot.background = element_rect(colour = "black", fill=NA, size=1)
-    ) +
-    guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
-                                 title.position = "top", title.hjust = 0.5))
-  return(p)
-}
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Estimativas. e estatísticas de qualidade da inferência, resultantes
-# da amostragem dupla (double sampling)
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-dsStats = function(y, x, xLarge, alpha=.05){
-  n = length(y)
-  beta = ( sum(y*x, na.rm=T) - ( sum(x, na.rm=T)*sum(y, na.rm=T) / n ))  / ( sum(x^2, na.rm=T) - (sum(x, na.rm=T)^2 / n) )
-  
-  rho = cor(y,x)
-  N = length(xLarge)
-  
-  ydsr = mean(y, na.rm=T) + beta * ( mean(xLarge, na.rm=T) - mean(x, na.rm=T) )
-  vardsr = (var(y, na.rm=T)/n)*(1 - (rho^2)*(N-n)/N)
-  stderr = sqrt(vardsr)
-  ci     = calcCI(stderr, n, alpha)
-  
-  out = c(media = ydsr, var = vardsr, dp = stderr, ic = ci, erro = 100*ci/ydsr, n=n, rho=rho)
-  
-  return(out)
-}
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Cálculo do número ideal de unidades amostrais em double sampling, ou
 # seja, da intensidade amostral necessária para gerar o erro admissível
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 dsNumberOfPlots = function(y, x, xLarge, Cpg = 300, 
-                           errDesired = .05, alpha = .05){
+                           errDesired = 0.1, alpha = 0.05){
   
   rho = cor(x,y)
   a = var(y) * (1 - rho^2)
@@ -231,6 +142,9 @@ dsNumberOfPlots = function(y, x, xLarge, Cpg = 300,
   return(nP)
 }
 
+seramesmo = dsNumberOfPlots(x = X$zq95,
+                            y = X$VTCC)
+seramesmo
 # ----
 
 
@@ -405,73 +319,55 @@ opt_output_files(ctg_tile) <-     # Onde guardar as nuvens das parcelas
 opt_select(ctg_tile) <- "xyz"   # Carrega na memória apenas coordenadas   
 opt_filter(ctg_tile) <- "-drop_z_below 0"     # Ignora pontos com z < 0
 
-# FIM DO PROCESSAMENTO DE NUVEM
-
-
-
-# BLOCO DESTINADO A ORGANIZAÇÃO DOS DADOS PARA A FUNÇÃO TWOPHASE()
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 4. Organização dos dados para cálculo das estimativas e inferências
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ----
 # Seleciona apenas as parcelas em que a área é maior do que 1 m²
 talhoes_final <- shp_talhoes %>%
   filter_at(vars(AREAPARCEL), all_vars(. >= 1))
+
 
 metrics_list <- list() # Inicializa uma lista para armazenar as métricas de cada parcela
 
 # Loop sobre cada parcela no shapefile
 for (i in 1:nrow(talhoes_final)) { # Para cada número de linhas do data frame que contém as informações 
   shp_parcela <- talhoes_final[i, ]  # Pegue a i-ésima parcela
-  
-  # Recorte os pontos LiDAR para essa parcela e converta para LAS
-  las_crop <- clip_roi(ctg_tile, shp_parcela)  # Retorna um LAScatalog
-  
-  # Verifique se o retorno é um LAScatalog, e se sim, converta para LAS
-  if (class(las_crop) == "LAScatalog") {
-    # Processa o LAScatalog para obter os pontos LiDAR dentro da parcela
-    las_crop <- readLAS(las_crop)
+  las_crop <- clip_roi(ctg_tile, shp_parcela)  # Recorte os pontos LiDAR para essa parcela e converta para LAS
+  if (class(las_crop) == "LAScatalog") { # Verifique se o retorno é um LAScatalog, e se sim, converta para LAS. 
+    las_crop <- readLAS(las_crop) 
   }
-  
   # Verifique se a parcela contém pontos LiDAR
   if (!is.null(las_crop)) {
-    # Calcule as métricas para essa parcela
-    metrics <- cloud_metrics(las_crop, func = .stdmetrics_z)
-    
+    metrics <- cloud_metrics(las_crop, func = .stdmetrics_z)     # Calcule as métricas para essa parcela
     # Converta as métricas para um data frame e adicione um identificador da parcela
     metrics_df <- as.data.frame(t(metrics))  # Transforma as métricas em um data frame com uma linha
     metrics_df$id <- talhoes_final$id[i]  # Identficador da parcela
-    
-    # Armazene as métricas no data frame
-    metrics_list[[i]] <- metrics_df
+    metrics_list[[i]] <- metrics_df  # Armazene as métricas no data frame
   } else {
-    # Se não houver pontos na parcela, armazene NA
-    metrics_list[[i]] <- data.frame(parcela_id = i, zmean = NA, zmax = NA, zmin = NA)  # Exemplo de colunas
+    print("Erro: parcela", parcela_id[i], "sem pontos") # Indica parcela sem ponto
   }
 }
 
-# Combine todas as métricas em um único data frame
-metrics_df_final <- do.call(rbind, metrics_list)
+metrics_df_final <- do.call(rbind, metrics_list) # Combine todas as métricas em um único data frame
 
 # Fazer o merge das métricas com os dados
 final_df <- merge(talhoes_final, metrics_df_final, by = "id") %>%
-  filter_at(vars(AREAPARCEL), all_vars(. >= 1))
+  filter_at(vars(AREAPARCEL), all_vars(. >= 1)) # Seleciona apenas parcelas com pelo menos 1m²
 
-# Cálculo do boundary weights
+# Cálculo do boundary weights. Representação percentual do tamanho da parcela (Ex. 1 = 400m²; 0.5 = 200m²)
 var_boundaryweights <- (final_df$AREAPARCEL)/400
 final_df$boundaryweights <- var_boundaryweights
 
 # Escolhe um subgrupo de métricas e dados para estudo da correlação
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 X <- tibble(final_df) %>% select(Inventario, boundaryweights, MHDOM, IDINV, zmean, 
                           zq45, zq75, zq95, VTCC, VCCC)
 
 X$Inventario <- as.numeric(X$Inventario) # Converter coluna Inventario para Integer (número) - Deve estar em algum formato numérico para ser reconecida pela função twophase()
-X$zq95 <- as.numeric(X$zq95)
+X$zq95 <- as.numeric(X$zq95) # Conversões
 X$zq45 <- as.numeric(X$zq45)
 X$zq75 <- as.numeric(X$zq75)
 X$zmean <- as.numeric(X$zmean)
-#### VER SE É NECESSÁRIO FZR TD ISSO DE CONVERSAO
 X <- as.data.frame(X) # Tibble não é uma função nativa do R, é uma função chamada pelo tidyverse. Dessa forma, o formato da tabela que é gerada não é reconhecido pela função twophase() do package forestinventory. O forestinventory reconhece data frames, já que são nativos do R.
-
 
 # Análise de regressão linear para verificar a correlação
 # entre o p95 e a idade do inventário com o VTCC
@@ -482,363 +378,204 @@ VTCCparcelas <- X$VTCC[!is.na(X$VTCC)] # VTCCparcelas recebe os valores não nul
 plot(VTCCparcelas, predict(m))              # Gráfico de observado vs predito
 abline(0,1)
 
-# Retorna a estimativa e as inferências a partir da ACS
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-op_ACS <- onephase(formula = VTCC~1, data = X,
-               phase_id =list(phase.col = "Inventario",terrgrid.id = 2))
-summary(op_ACS)
-confint(op_ACS)
+# 5. Retorna as estimativas e as inferências para cada uma das abordagens
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ----
 
-# Retorna a estimativa e as inferências a partir da ACE
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Amostragem Casual Simples (ACS)
+op_ACS <- onephase(formula = VTCC~1, data = X, # VTCC~1, pois não é feita regressão linear. X é a base de dados
+               phase_id = list(phase.col = "Inventario",terrgrid.id = 2)) # phase.col solicita o nome da coluna que identifica a informação de campo
+               # terrgrid solicita o identificador da informação de campo. Ex. todas as linhas do data.frame em que Inventario vale 2, há informação de VTCC coletada em campo
+
+summary(op_ACS) # Printa a estimativa da variável de interesse, a variância e a quantidade de amostras
+confint(op_ACS) # Printa a estimativa da variável de interesse e o int. de confiança
+# Calculam o erro associado à estimativa (%)
+aux_ACS = confint(op_ACS)
+erroPercentualACS = ((aux_ACS$ci$estimate - aux_ACS$ci$ci_lower_op)*100)/aux_ACS$ci$estimate
+
+# Amostragem Casual Estratificada (ACE)
 op_ACE <- onephase(formula = VTCC~1, data = X,
                    phase_id =list(phase.col = "Inventario",terrgrid.id = 2),
-                   area = list(sa.col = "IDINV", areas = c("3.7", "5.2")))
+                   area = list(sa.col = "IDINV", areas = c("3.7", "5.2"))) # sa.col indica a coluna a ser utilizada como estrato
+                    # areas identifica os estratos pelos valores contidos na coluna indicada a sa.col
 summary(op_ACE)
 confint(op_ACE)
 
-# Unifica as estimativas e as inferências obtidas 
-# por estrato na ACE para toda a área 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Unifica as estimativas e as inferências obtidas por estrato. O resultado final diz respeito à área inteira
+idadesEstratos = c(unique(talhoes$IDINV)) # Indica quais são os valores presentes na coluna, sem repetições
 VTCCponderadaACE = c()
-areaTotal = sum(talhoes$AREA)
-foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
+areaTotal = sum(talhoes$AREA) # Área total da fazenda
+foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% { 
   VTCCponderadaACE[i] = ((sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]))/areaTotal)*(op_ACE$estimation$estimate[op_ACE$estimation$area == idadesEstratos[i]])
 }
-VTCCponderadaACE_final = sum(VTCCponderadaACE)
+VTCCponderadaACE_final = sum(VTCCponderadaACE) # Retorna uma única estimativa do VTCC para a fazenda inteira
 
 VarponderadaACE = c()
 foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
   VarponderadaACE[i] = (((sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]))/areaTotal)^2)*(op_ACE$estimation$variance[op_ACE$estimation$area == idadesEstratos[i]])
 }
-VarponderadaACE_final = sum(VarponderadaACE)
+VarponderadaACE_final = sum(VarponderadaACE) # Retorna uma única inferência sobre a variância associada ao VTCC da fazenda
 
 calcCI = function(err, n, alpha=.05){ # err = desvio padrão, n = tamanho da amostra e alpha = nível de significância (95% de confiança)
   return(
     qt(1 - alpha/2, n-1) * err # Calcula o quantil da distribuição de t de Student para o nível de liberdade desejado. Multiplica pelo erro para obter o intervalo de confiança
   ) # retorno do ic
 }
+intervaloConfiancaACE = calcCI(erroPadrao_ponderadoACE, numeroAmostras) # Chama a função calcCI para calcular o Intervalo de Confiança
 
-erroPadrao_ponderadoACE = sqrt(VarponderadaACE_final)
-numeroAmostras = sum(op_ACE$estimation$n2)
-intervaloConfiancaACE = calcCI(erroPadrao_ponderadoACE, numeroAmostras)
+erroPadrao_ponderadoACE = sqrt(VarponderadaACE_final) # Cálculo do desvio padrão
+numeroAmostras = sum(op_ACE$estimation$n2) # Retorna o número de amostras na fazenda
+erroPercentualACE = (intervaloConfiancaACE*100)/VTCCponderadaACE_final # Cálculo do erro percentual associado à estimativa
 
 # Resultados finais da ACE:
-VTCCponderada_final
+VTCCponderadaACE_final
 VarponderadaACE_final
 erroPadrao_ponderadoACE
 intervaloConfiancaACE
 
-# Retorna a estimativa e as inferências a partir da Dupla Amostragem
+# Dupla Amostragem
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, # formula relaciona os valores de VTCC com zq95 e IDINV
+reg2p_nex <- twophase(formula = VTCC ~ zq95 + IDINV, # formula relaciona os valores de VTCC com zq95 e IDINV (análise de regressão)
   data = X, #  Base de dados utilizada
   phase_id = list(phase.col = "Inventario", terrgrid.id = 2)) # phase_id recebe uma lista em que a coluna a ser analisada é a "Inventario" e o identificador da segunda fase é 2
 summary(reg2p_nex) # Dá os resultados da Dupla Amostragem
 confint(reg2p_nex) # Estatística de confiança
 
-# estudar pq unbiased é FALSE
+aux_reg2p_nex = confint(reg2p_nex) # Variável auxiliar
+erroPercentualDA = ((aux_reg2p_nex$ci$estimate - aux_reg2p_nex$ci$ci_lower_ext)*100)/aux_reg2p_nex$ci$estimate
+# Retorna o erro percentual 
+
+
+# Dupla Amostragem Estratificada
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 reg2p_nex_est = twophase(
   formula = VTCC ~ zq95 + IDINV,
   data = X,
   phase_id =list(phase.col = "Inventario", terrgrid.id = 2),
-  small_area = list(sa.col = "IDINV", areas = c("3.7", "5.2"), unbiased = FALSE))
+  small_area = list(sa.col = "IDINV", areas = c("3.7", "5.2"), unbiased = FALSE)) 
 summary(reg2p_nex_est)
 
-# FAZER A PARTE DAS MEDIAS PONDERADAS
-
-
-# Prepara o gráfico para análise das correlações
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cormat <- X %>% cor()
-cormat <- round(cor(cormat), 2) %>% reorder_cormat()
-p      <- graphCormat(cormat)
-
-grfDir <- str_c(dirProjet, '/RESULTADOS/') # Define pasta p/ resultados
-if (!dir.exists(grfDir)) {                # Cria pasta, caso não exista
-  dir.create(grfDir, showWarnings = F)
+VTCCponderadaDAE = c()
+foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
+  VTCCponderadaDAE[i] = ((sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]))/areaTotal)*(reg2p_nex_est$estimation$estimate[reg2p_nex_est$estimation$area == idadesEstratos[i]])
 }
+VTCCponderadaDAE_final = sum(VTCCponderadaDAE)
 
-fileGrf <- str_c(grfDir, "MatrizDeCorrelacoes.jpg")   # Arq para matriz
-tituGrf <- "Matriz de Correlacoes de Pearson"        # Define um título
+erroPadrao_ponderadoDAE = sqrt(VarponderadaDAE_final)
+intervaloConfiancaDAE = calcCI(erroPadrao_ponderadoDAE, reg2p_nex_est$estimation$n2[1])
 
-# Abre "impressora" para gerar e salvar o gráfico no formato JPEG
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-jpeg(fileGrf, width = 1000, height = 1000, units = "px", quality = 200)
-plot(p + labs(title=tituGrf))
-dev.off()                                        # Fecha a "impressora"
-
-# Análise de regressão por quadrados mínimos ordinários (OLS) para
-# determinação do modelo de predição.  Testando: VTCC ~f(zq90,IDINV)
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-m <- lm(VTCC ~ zq95 + IDINV, data = X)    # Análise de Regressão Linear
-summary(m)                          # Mostra os resultados da regressão
-plot(X$VTCC, predict(m))              # Gráfico de observado vs predito
-abline(0,1)
-
-# ----
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 4. Criação de mapas raster com as métricas mais promissoras
-#    É possível processar a partir deste bloco, desde que já tenham
-#    sido processadas as linhas 1 a 229 (Bloco 1.)
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ----
-prjNam    <- "PRJ_FAZENDAMODELO"                             # Nome do projeto
-dirRaizNuvens <- str_c('C:/LiDAR/',prjNam, '/NUVENS') # Raiz das nuvens
-dirDadosLiDAR <- str_c(dirRaizNuvens, '/A13/TALHOES/SiNORM')
-
-# Lê catálogo de com as núvens por talhão normalizadas
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ctg_taln <- readLAScatalog(dirDadosLiDAR)
-nNuvens  <- length(ctg_taln$filename)    # Número de núvens no catálogo
-
-# Criação de mapas raster formato tif para as métricas de interesse
-#   Atribua à variável "interesse" uma das métricas calculadas pela
-#   função padrão ".stdmetrics_z", dentre as várias: zmax, zmean, 
-#   zsd, zskew, zkurt, zentropy, pzabovezmean, pzabove2, zq5, zq10,
-#   zq15, zq20, zq25, zq30, zq35, zq40, zq45, zq50, zq55, zq60, zq65,
-#   zq70, zq75, zq80, zq85, zq90, zq95, zpcum1, zpcum2, zpcum3, zpcum4,
-#   zpcum5, zpcum6, zpcum7, zpcum8, zpcum9
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-interesse <- "zq95"
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Criação de mapas raster para a métrica de interesse  (PIXEL QUADRADO)
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-dirDadosRaster <- str_c(dirDadosLiDAR, '/RSTR_qua/')        # Quadrados
-if (!dir.exists(dirDadosRaster)) {
-  dir.create(dirDadosRaster, showWarnings = F)
+#Esquisito esse valor da variância - verificar cálculo. A variância em 5.2 ta mt mais alta, mas tem mais parcelas de campo
+VarponderadaDAE = c()
+foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
+  VarponderadaDAE[i] = (((sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]))/areaTotal)^2)*(reg2p_nex_est$estimation$g_variance[reg2p_nex_est$estimation$area == idadesEstratos[i]])
 }
-#pixelmetrics para um lasCatalog
-pb <- progress_bar$new(total = 2*nNuvens) # Reset da barra de progresso
-for (i in 1:nNuvens) {
-  nuvem   <- ctg_taln$filename[i]
-  talhao  <- ctg_taln$filename[i] %>% basename() %>% file_path_sans_ext()
-  
-  las <- readLAS(nuvem, select = "xyz", 
-                 filter = "-drop_z_below 2")    # lê apenas pontos > 2m
-  
-  pb$tick()                                 # Avança barra de progresso
-  inteRaster <- (las %>%   # Cria objeto raster da métrica de interesse
-                   pixel_metrics(.stdmetrics_z, res = 20))[[interesse]]
-  
-  rstNome <- str_c(dirDadosRaster, talhao,'_sqr_', interesse, '.tif')
-  writeRaster(inteRaster, rstNome, overwrite=TRUE)  # Salva arquivo tif
-  
-  pb$tick()                                 # Avança barra de progresso
-  rstNome <- str_c(dirDadosRaster, talhao,'_sqr_', interesse, '.png')
-  # Cria parâmetros para melhorar a legenda do gráfico raster
-  minL = round(minmax(inteRaster)[1])-1         # Menor valor no raster
-  maxL = round(minmax(inteRaster)[2])+1         # Maior valor no raster
-  brkL = round((maxL - minL) / 5)            # Legenda com cinco breaks
-  intL = c(minL + brkL, minL + 2*brkL, minL + 3*brkL, minL + 4*brkL)
-  limL = c(minL, maxL)
-  titulo  <- str_c('Talhao: ', talhao, ' | Metrica: ', interesse, 
-                   ' | Min: ', minL, ' | Max: ', maxL)
-  p <- ggplot() + geom_spatraster(data = inteRaster, aes()) +
-    guides(fill = guide_legend(reverse=F)) +  
-    coord_sf(datum=st_crs(31983)) +       # Gráfico numa certa projeção
-    scale_fill_whitebox_c(palette = "atlas", direction = -1,
-                          breaks = intL, limits = limL)+ggtitle(titulo)
-  png(rstNome, 30, 20, 'cm', res = 200)              # Abre "impressão"
-  print(p)
-  dev.off()                               # Fecha "impressão" do aquivo
-}
-teste = 0
+VarponderadaDAE_final = sum(VarponderadaDAE)
+
+erroPercentualDAE = (intervaloConfiancaDAE*100)/VTCCponderadaDAE_final
+
+# Resultados da Dupla Amostragem Estratificada
+VTCCponderadaDAE_final # VTCC
+VarponderadaDAE_final # Variância
+erroPadrao_ponderadoDAE # Desvio Padrão
+intervaloConfiancaDAE # Intervalo de Confiança
+erroPercentualDAE # Erro percentual
+
+# Cria tabela para facilitar a visualização dos resultados
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# !!! Método alternativo:
-# Criação de mapas raster para a métrica de interesse (PIXEL HEXAGONAL)
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# dirDadosRaster <- str_c(dirDadosLiDAR, '/RSTR_hex/')       # Hexagonais
-# if (!dir.exists(dirDadosRaster)) {
-#   dir.create(dirDadosRaster, showWarnings = F)
+aux_ciop = confint(op_ACS)
+ciop = aux_ciop$ci$estimate - aux_ciop$ci$ci_lower_op # Corresponde ao intervalo de confiança da ACS
+
+aux_cir2p = confint(reg2p_nex)
+cir2p = aux_cir2p$ci$estimate - aux_cir2p$ci$ci_lower_g # Corresponde ao intervalo de confiança da AD
+# Intervalos de confiança das amostragens estratificadas já foram calculados previamente
+
+# Cria um data frame que servirá como base de dados para a tabela
+data <- data.frame(
+  Resultados = c("Estimativa VTCC", "Variância", "Desvio Padrão", "Intervalo de confiança (95%)", "Erro (%)"),
+  ACS = c(op_ACS$estimation$estimate, op_ACS$estimation$variance, sqrt(op_ACS$estimation$variance), ciop, erroPercentualACS),
+  ACE = c(VTCCponderadaACE_final, VarponderadaACE_final, erroPadrao_ponderadoACE, intervaloConfiancaACE, erroPercentualACE),
+  AD = c(reg2p_nex$estimation$estimate, reg2p_nex$estimation$g_variance, sqrt(reg2p_nex$estimation$g_variance), cir2p, erroPercentualDA),
+  ADE = c(VTCCponderadaDAE_final, VarponderadaDAE_final, erroPadrao_ponderadoDAE, intervaloConfiancaDAE, erroPercentualDAE)
+)
+
+# Crie a tabela como um gráfico usando ggtexttable
+tabela = ggtexttable(data, theme = ttheme("mBlue"))
+
+tabela # Plot da tabela
+
+# Extra:
+#IA = str_c("ha/1 parc. para erro de ", as.character(erro), "%")
+# data <- data.frame(
+#   Resultados = c("Estimativa VTCC", "Variância", "Desvio Padrão", "Intervalo de confiança (95%)", "Erro (%)", IA),
+#   ACS = c(op_ACS$estimation$estimate, op_ACS$estimation$variance, sqrt(op_ACS$estimation$variance), ciop, erroPercentualACS, tamanhoIdealACS),
+#   ACE = c(VTCCponderadaACE_final, VarponderadaACE_final, erroPadrao_ponderadoACE, intervaloConfiancaACE, erroPercentualACE, tamanhoIdealACE),
+#   AD = c(reg2p_nex$estimation$estimate, reg2p_nex$estimation$g_variance, sqrt(reg2p_nex$estimation$g_variance), cir2p, erroPercentualDA, 0),
+#   ADE = c(VTCCponderadaDAE_final, VarponderadaDAE_final, erroPadrao_ponderadoDAE, intervaloConfiancaDAE, erroPercentualDAE, 0)
+# )
+# 
+# # Crie a tabela como um gráfico usando ggtexttable
+# tabela = ggtexttable(data, theme = ttheme("mBlue"))
+# tabela
+
+
+
+
+# 
+# erro <- 10 # erro de 10%                                 # Aqui o alpha antes estava como alpha = erro/100, isso não funciona, pois, para o caso de um erro de 10%, o alpha valeria 0.1 e nós queremos um alpha de 0.05 (IC de 95%). Um alpha = 0.1 indica um IC de 90% (1 - 0.1/2 = 0.95, onde 0.5 é a cauda superior e 0.5 a cauda inferior)
+# tamanhoIdealAC_fun = function(y, N, errDesired=erro/100, alpha=.05){ # Y vai receber o data.frame com a VTCC de cada parcela de campo e N vai receber o número máximo de parcelas de campo
+#   B  =  errDesired * mean(y) # B representa o erro absoluto; é a média das VTCC * 0,1 -> é uma constante que representa o valor do erro de 10% em m³ por ha, se passar do valor de B, então o erro é maior do que 10%
+#   qt = qt(1 - alpha/2, length(y)-1) # quantil 97,5% - 95% de confiança para o grau de liberdade delimitado (13 parcelas de campo - 1 = 12)
+#   n  = N*var(y)*qt^2 / (N * B^2 + qt^2 * var(y)) # Calcula o tamanho ideal de amostra baseando-se na variância de y, no tamanho máx. da pop (N), no limite do erro B e na confiança desejada (95%)
+#   return(n)
 # }
 # 
-# pb <- progress_bar$new(total = 2*nNuvens) # Reset da barra de progresso
-# for (i in 1:nNuvens) {
-#   nuvem   <- ctg_taln$filename[i]
-#   talhao  <- ctg_taln$filename[i] %>% basename() %>% file_path_sans_ext()
 # 
-#   las <- readLAS(nuvem, select = "xyz",
-#                  filter = "-drop_z_below 2")    # lê apenas pontos > 2m
+# parcelaAreaMedia <- mean(final_df$AREAPARCEL) / 10000          # quantidade de parcelas de campo por ha com base na média de suas áreas
+# N_max <- round(areaTotal / parcelaAreaMedia , 0)
 # 
-#   pb$tick()                                 # Avança barra de progresso
-#   inteRaster <- las %>%
-#     hexagon_metrics(.stdmetrics_z, area = 400) %>%
-#     select(contains(c(interesse, "geometry"))) %>%
-#     st_rasterize()
-#   
-#   rstNome <- str_c(dirDadosRaster, talhao,'_hex_', interesse, '.tif')
-#   write_stars(inteRaster, rstNome)
-#   
-#   pb$tick()                                 # Avança barra de progresso
-#   rstNome <- str_c(dirDadosRaster, talhao,'_hex_', interesse, '.png')
-#   titulo  <- str_c('Talhão: ', talhao, '  /  Métrica: ', interesse)
-#   inteRaster <- as(inteRaster, "SpatRaster")
-#   # Cria parâmetros para melhorar a legenda do gráfico raster
-#   minL = round(minmax(inteRaster)[1])-1         # Menor valor no raster
-#   maxL = round(minmax(inteRaster)[2])+1         # Maior valor no raster
-#   brkL = round((maxL - minL) / 5)            # Legenda com cinco breaks
-#   intL = c(minL + brkL, minL + 2*brkL, minL + 3*brkL, minL + 4*brkL)
-#   limL = c(minL, maxL)
-#   titulo  <- str_c('Talhão: ', talhao, ' | Métrica: ', interesse, 
-#                    ' | Mín: ', minL, ' | Máx: ', maxL)
-#   p <- ggplot() + geom_spatraster(data = inteRaster, aes()) +
-#     guides(fill = guide_legend(reverse=F)) +  
-#     coord_sf(datum=st_crs(31983)) +       # Gráfico numa certa projeção
-#     scale_fill_whitebox_c(palette = "atlas", direction = -1,
-#                           breaks = intL, limits = limL)+ggtitle(titulo) 
-#   png(rstNome, 30, 20, 'cm', res = 200)              # Abre "impressão"
-#   print(p)
-#   dev.off()                               # Fecha "impressão" do aquivo
+# N_max_est = c()
+# foreach (i = 1:length(unique(X$IDINV))) %do% {
+#   N_max_est[i] <- round((sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]) / parcelaAreaMedia), 2)
 # }
+# 
+# 
+# 
+# 
+# ### Intensidade Amostral: ACS - resultado em n° parc. por ha
+# tamanhoIdealACS = round(areaTotal/(tamanhoIdealAC_fun(X$VTCC[X$Inventario == 2], N_max)), 2)
+# 
+# ### Intensidade Amostral: ACE -                !!!!!!!depois fazer na mão!!!!!!!
+# tamanhoIdealACE_aux = c()
+# foreach (i = 0:length(unique(X$IDINV))) %do% {
+#   tamanhoIdealACE_aux[i] = c(round(areaTotal/(tamanhoIdealAC_fun(X$VTCC[X$Inventario == 2 & X$IDINV == idadesEstratos[i]], N_max_est)), 2))
+#   tamanhoIdealACE_aux[i] = tamanhoIdealACE_aux[i]*(sum(talhoes$AREA[talhoes$IDINV == idadesEstratos[i]]))/(areaTotal)
+# }
+# tamanhoIdealACE = sum(tamanhoIdealACE_aux)
+# 
+# teste = (((1417.71*40.05)/sqrt(5))/(((1417*40.05)/sqrt(5))+((2027.85*41.7)/(sqrt(8)))))
+# print(teste) # W para 3.7
+# 
+# teste1 = (((2027.85*41.7)/sqrt(8))/(((1417*40.05)/sqrt(5))+((2027.85*41.7)/(sqrt(8)))))
+# print(teste1)
+# 
+# Sy_aux = c(X$VTCC[X$Inventario == 2 & X$IDINV == 3.7])
+# Sy = sum(Sy_aux^2) - (sum(var(X$VTCC[X$Inventario == 2 & X$IDINV == 3.7]))^2)/5
+# 
+# S2h = Sy/4 # variancia
+# 
+# idade_menor = ((N_max_est[1]^2)*var(X$VTCC[X$Inventario == 2 & X$IDINV == 3.7]))/teste
+# idade_maior = ((N_max_est[2]^2)*var(X$VTCC[X$Inventario == 2 & X$IDINV == 5.2]))/teste1
+# fim = idade_menor + idade_maior
+# 
+# aux_B_N_t = (mean(X$VTCC[X$Inventario == 2])*0.1*N_max^2)/(qt(1 - 0.05/2, 12))^2
+# 
+# soma_final_id_menor = N_max_est[1]*var(X$VTCC[X$Inventario == 2 & X$IDINV == 3.7])
+# soma_final_id_maior = N_max_est[2]*var(X$VTCC[X$Inventario == 2 & X$IDINV == 5.2])
+# fim1 = soma_final_id_maior + soma_final_id_menor
+# 
+# print(fim/(aux_B_N_t + fim1))
+### DEPOIS DE TUDO PRECISO VERIFICAR OS CÁLCULOS!!!!
 
-# Cálculo de mapas raster como função dos mapas rasters de métricas
-# criados nos passos anteriores.  Por exemplo, MAPA DE VOLUME
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-ctg_taln <- readLAScatalog(dirDadosLiDAR)
-nNuvens  <- length(ctg_taln$filename)    # Número de núvens no catálogo
-
-# Criação de mapas raster formato tif para as métricas de interesse
-#   Atribua à variável "interesse" uma das métricas calculadas pela
-#   função .stdmetrics_z: zmax, zmean, zsd, zskew, zkurt, zentropy,
-#   pzabovezmean, pzabove2, zq5, zq10, zq15, zq20, zq25, zq30, zq35, 
-#   zq40, zq45, zq50, zq55, zq60, zq65, zq70, zq75, zq80, zq85, zq90,
-#   zq95, zpcum1, zpcum2, zpcum3, zpcum4, zpcum5, zpcum6, zpcum7,
-#   zpcum8, zpcum9
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-interesse <- "zq95"
-
-# Criação de lista de mapas raster criados nos passos anteriores
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-listaRasters <- list()
-for (i in 1:nNuvens) {
-  nuvem   <- ctg_taln$filename[i]
-  talhao  <- ctg_taln$filename[i] %>% basename() %>% file_path_sans_ext()
-  rstNome <- str_c(dirDadosRaster, talhao,'_sqr_', interesse, '.tif')
-  
-  listaRasters[[i]] <- rast(rstNome)
-}
-
-# Junta os rasters para gerar um mapa único com a métrica de interesse
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rastersJuntos <- do.call(merge, listaRasters)
-
-# Cria gráfico caprichado da métrica de interesse com todos os rasters  
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-minL = round(minmax(rastersJuntos)[1])-1        # Menor valor no raster
-maxL = round(minmax(rastersJuntos)[2])+1        # Maior valor no raster
-brkL = round((maxL - minL) / 5)              # Legenda com cinco breaks
-intL = c(minL + brkL, minL + 2*brkL, minL + 3*brkL, minL + 4*brkL)
-limL = c(minL, maxL)
-titulo  <- str_c('Métrica: ', names(rastersJuntos),
-                 ' | Mín: ', minL, ' | Máx: ', maxL)
-p <- ggplot() + geom_spatraster(data = rastersJuntos, aes()) +
-  guides(fill = guide_legend(reverse=F)) +  
-  coord_sf(datum=st_crs(31983)) +       # Gráfico numa certa projeção
-  scale_fill_whitebox_c(palette = "atlas", direction = -1,
-                        breaks = intL, limits = limL)+ggtitle(titulo)
-rstNome <- str_c(dirDadosRaster, 'talhoes_', names(rastersJuntos), '.png')
-png(rstNome, 30, 20, 'cm', res = 200)              # Abre "impressão"
-print(p)
-dev.off()                               # Fecha "impressão" do aquivo
-
-# Lê o arquivo shape com os limites e atributos dos talhoes
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-dirShape <- str_c('C:/GitRepo/',prjNam, '/SHAPES')   # Pasta com shapes
-arqShape <- str_c(dirShape, '/Modelo_talhoes.shp')      # Nome do shape
-
-# Cria estrutura de dados (data frame) com os atributos dos talhoes
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-poligonos <- vect(arqShape)
-
-# Plota mapa de rasters juntados sobreposto com os limites dos talhões
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-plot(rastersJuntos)
-plot(poligonos, add = TRUE, col = "white")
-# ----
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 5 . Cria um novo raster com as estimativas de VOLUME para produção
-#     do mapa de VTCC. A esrimativa será obtida a partir do modelo
-#     ajustado na fase anterior:
-#                           VTCC = -444.142 + 24.63 zq95 + 20.133 IDINV
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ----
-
-# A lista poligonos$SUBTALHAO contém os nomes dos talhões da Fazenda
-# Modelo:  "302c" "301a" "301d" "302a". Criação de um vetor com as
-# correspondentes idades na mesma ordem, para inclusão no objeto 
-# com informações sobres os poligonos
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Idades <- as.numeric(c(5.2, 3.7, 3.7, 5.2))
-poligonos$IDINV <- Idades
-
-valoresAtrib <- poligonos$IDINV
-
-# Cria um novo raster com a idade do respectivo polígono atribuída ao
-# respectivo pixel sobreposto
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rastersIdade <- rasterize(poligonos, rastersJuntos,
-                          field=valoresAtrib, ext=ext(rastersJuntos), 
-                          res=res(rastersJuntos)) %>% rename(IDINV = layer)
-
-# Junta rasters, mantendo os respecivos valores em layers separados,
-# renomeia as colunas e assim, agora rastersJuntos tem as varíaveis
-# necessárias para estimar o parâmetro de interesse, uma em cada layer.
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rastersFinal <- c(rastersJuntos, rastersIdade)
-
-# Usa a equação ajustada (final do bloco 3 deste script) para estimar
-# o parâmetro de interesse
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rastersVolume <- -444.142 + 24.630 * rastersFinal["zq95"] +
-  20.133 * rastersFinal["IDINV"]
-rastersVolume <- rastersVolume %>% rename(VTCC = zq95)
-
-# Junta layer VTCC como novo layer no raster final
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rastersFinal = c(rastersFinal, rastersVolume) 
-
-# Cria novo raster de volumes mudando para zero valores negativos
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-vtcc <- ifel(rastersFinal[["VTCC"]] < 0, 0, rastersFinal)[["VTCC"]]
-minmax(vtcc)[1]
-minmax(vtcc)[2]
-
-# Apaga rasters intermediários
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rm(inteRaster, rastersIdade, rastersJuntos, rastersVolume)
-
-# /////////////////////////////////////////////////////////////////////
-#       MAPA DE ESTIMATIVAS DE VOLUME TOTAL COM CASCA (VTCC)
-# /////////////////////////////////////////////////////////////////////
-minL = round(minmax(vtcc)[1])                   # Menor valor no raster
-maxL = round(minmax(vtcc)[2])                   # Maior valor no raster
-brkL = round((maxL - minL) / 6)              # Legenda com cinco breaks
-intL = c(minL+brkL, minL+2*brkL, minL+3*brkL, minL+4*brkL, minL+5*brkL)
-limL = c(minL, maxL)
-titulo  <- str_c('Mapa de estimativas de VTCC | Mín: ', minL, 
-                 ' | Máx: ', maxL)
-p <- ggplot() + geom_spatraster(data = vtcc, aes()) +
-  guides(fill = guide_legend(reverse=F)) +  
-  coord_sf(datum=st_crs(31983)) +       # Gráfico numa certa projeção
-  scale_fill_whitebox_c(palette = "atlas", direction = -1,
-                        breaks = intL, limits = limL)+ggtitle(titulo)
-rstNome <- str_c(dirDadosRaster, 'talhoes_VTCC.png')
-png(rstNome, 30, 20, 'cm', res = 200)              # Abre "impressão"
-print(p)
-dev.off()                               # Fecha "impressão" do aquivo
-
-
-# ----
-
-# /////////////////////////////////////////////////////////////////////
-#    TENTE AGORA CRIAR A TABELA COM A ESTIMATIVA DE VOLUME CALCULADA
-#    PELA AMOSTRAGEM DUPLA (SEMELHANTE À QUE FIZEMOS PARA ACS E ACE)
-# /////////////////////////////////////////////////////////////////////
-
+###
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Este script foi atualizado em Dezembro/2023 depois de instalar,
