@@ -1,14 +1,14 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Inventário com dados LiDAR na Fazenda Modelo ~~~~~~~~~~~~~~~~~~~~~~~~
 #
-# Autor: Luiz Carlos Estraviz Rodriguez
-#        Departamento de Ciências Florestais
-#        ESALQ/USP - 02/Dez/2023
+# Autores: Luiz Carlos Estraviz Rodriguez e Otávio Magalhães Silva Souza
+#          Departamento de Ciências Florestais
+#          ESALQ/USP - 25/Set/2024
 #
 # Inventário florestal da Fazenda Modelo
 #   - download dos dados mantidos em um repositório github público
 #      - shape files dos talhões florestais
-#      - LiDAR multitemporal (2013 e 2014)
+#      - LiDAR multitemporal (2013)
 #   - sugestão de pastas locais
 #        C:/LiDAR/PRJ_Modelo/NUVENS/     como pasta para os dados LidAR
 #        C:/GitRepo/PRJ_Modelo/     sendo GitRepo a pasta onde ficam os
@@ -96,14 +96,14 @@ library(RCSF)
 if(!require(future))         # Package que permite ao lidR rodar usando
   install.packages("future")          # processamento paralelo de dados
 library(future)
-#cores  <- as.integer(parallel::detectCores() - 4)
-#plan(multisession, workers = cores)
+
+cores  <- as.integer(parallel::detectCores() - 1)
+plan(multisession, workers = cores)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Define pastas e local de trabalho
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-prjNam <- "PRJ_FAZENDAMODELO"                               # Nomeia o projeto
-varteste = 0
+prjNam <- "PRJ_Modelo"                               # Nomeia o projeto
 dirProjet <- str_c('C:/GitRepo/',prjNam) # Define diretório de trabalho
 if (!dir.exists(dirProjet)) {          # Cria diretório caso não exista
   dir.create('C:/GitRepo/', showWarnings = F)
@@ -120,6 +120,11 @@ if (!dir.exists(datDir)) {           # Cria diretórios caso não existam
 lidDir <- str_c(datDir, '/NUVENS/')     # Cria sub-pasta p/ dados LiDAR
 if (!dir.exists(lidDir)) {
   dir.create(lidDir, showWarnings = F)
+}
+
+shpDir <- str_c(dirProjet, '/SHAPES') # Define diretório para os shapes
+if (!dir.exists(shpDir)) {             # Cria diretório caso não exista
+  dir.create(shpDir, showWarnings = F)
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -182,28 +187,23 @@ for (ano in anoData) {     # guarda na sub-pasta de dados LiDAR por ano
 # Define o nome do arquivo com os dados espacializados disponíveis para
 # a área de estudo, faz o download e salva esses dados na devida pasta
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-gitOnde <-
-  "https://github.com/FlorestaR/dados/blob/main/5_LIDARF/Modelo/SHAPES"
-gitNome <- "fazmodelo.zip"                   # shapes da fazenda modelo
-gitArqv <- file.path(gitOnde, gitNome) %>% str_c("?raw=true")
+# gitOnde <-
+#   "https://github.com/FlorestaR/dados/blob/main/5_LIDARF/Modelo/SHAPES"
+# gitNome <- "fazmodelo.zip"                   # shapes da fazenda modelo
+# gitArqv <- file.path(gitOnde, gitNome) %>% str_c("?raw=true")
+# 
+# tmpd <- tempdir(check = TRUE)                    # diretório temporário
+# zipf <- file.path(tmpd, "shapes.zip")              # arquivo temporário
+# 
+# # Download e unzip do coonteúdo do arquivo zipado
+# # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# options(timeout=1000)
+# if(!file.exists(zipf)) {
+#   download.file(gitArqv, mode="wb", destfile = zipf) 
+# }
 
-tmpd <- tempdir(check = TRUE)                    # diretório temporário
-zipf <- file.path(tmpd, "shapes.zip")              # arquivo temporário
-
-# Download e unzip do coonteúdo do arquivo zipado
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-options(timeout=1000)
-if(!file.exists(zipf)) {
-  download.file(gitArqv, mode="wb", destfile = zipf) 
-}
-
-shpDir <- str_c(dirProjet, '/SHAPES') # Define diretório para os shapes
-if (!dir.exists(shpDir)) {             # Cria diretório caso não exista
-  dir.create(shpDir, showWarnings = F)
-}
-
-unzip(zipf, exdir = shpDir)   # unzipa shps e guarda na pasta de shapes
-unlink(zipf)                                  # deleta o arquivo zipado
+#unzip(zipf, exdir = shpDir)   # unzipa shps e guarda na pasta de shapes
+#unlink(zipf)                                  # deleta o arquivo zipado
 # ----
 
 
@@ -221,11 +221,29 @@ ctg_orig <- readLAScatalog(dirLAZ) # LEITURA DAS NUVENS DE PONTOS LiDAR
 opt_select(ctg_orig) <- "xyzic" # Só atributos xyz intensid. e classif.
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Lê shape e atributos dos talhoes
+# Lê atributos dos talhoes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-shpArq  <- str_c(shpDir, "/Modelo_talhoes.shp")      # shape de talhões
-tal_shp <- st_read(shpArq)
-st_is_valid(tal_shp)        # confere se os elementos do shape estão OK
+shpArq <- paste0(shpDir, "/Modelo_talhoes.shp")       # shape com talhões
+talhoesComGeo <- read_sf(shpArq)                    # completo com geom
+talhoesSemGeo <- tibble(sf::st_drop_geometry(talhoesComGeo))  # s/ geom
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Lê atributos das parcelas
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+shpArq <- paste0(shpDir, "/Modelo_parcelas.shp")     # shape com parcelas
+parcelasComGeo <- read_sf(shpArq)               # completo com geom
+parcelasSemGeo <- tibble(sf::st_drop_geometry(parcelasComGeo))      # confere se os elementos do shape estão OK
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Reúne a idade e a área de cada subtalhão em uma única tabela
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+talhoes <-
+  parcelasSemGeo %>% # Seleciona o df parcelasSemGeo
+  group_by(SUBTALHAO) %>% # Agrupa por subtalhao
+  summarise(IDINV = unique(IDINV)) %>% # Retorna a IDINV 
+  left_join(talhoesSemGeo) %>% # Funde com a tabela talhoesSemGeo
+  select("SUBTALHAO", "IDINV", "AREA") %>% # Seleciona apenas esses atributos de interesse
+  arrange(SUBTALHAO) %>% as.data.frame
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Os tiles de dados originais abrangem uma área maior do que a
@@ -237,6 +255,7 @@ dirTal <- str_c(dirLAZ, '/TALHOES')        # Pasta p/ nuvens por talhao
 if (!dir.exists(dirTal)) {
   dir.create(dirTal, showWarnings = F)
 }
+
 opt_chunk_buffer(ctg_orig) <- 10                          # 10 m buffer
 opt_output_files(ctg_orig) <- str_c(dirTal, "/{SUBTALHAO}")
 opt_laz_compression(ctg_orig) <- TRUE              # Mantém formato LAZ
@@ -291,29 +310,33 @@ rm(ctg_gNoN, ctg_gSiN, ctg_orig, ctg_talh) # limpa da memória catálogos
 
 # Lê shape e atributos das parcelas p/ acessar parâmetros de interesse
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-shpPar  <- str_c("C:/GitRepo/PRJ_FAZENDAMODELO/SHAPES/Modelo_parcentr.shp")    # shape de parcelas
-par_shp <- st_read(shpPar)
-st_is_valid(par_shp)        # confere se os elementos do shape estão OK
-
-dirParc <- str_c(dirNrm, '/PARCELAS')      # Pasta p/ parcelas clipadas
-if (!dir.exists(dirParc)) {
-  dir.create(dirParc, showWarnings = F)
-}
-
+#shpPar  <- str_c("C:/GitRepo/PRJ_FAZENDAMODELO/SHAPES/Modelo_parcentr.shp")    # shape de parcelas de campo
+#par_shp <- st_read(shpPar)
+#st_is_valid(par_shp)        # confere se os elementos do shape estão OK
+?st_is_valid
 # Exibe localização dos tiles, talhoes e parcelas
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 plot(ctg_tile, mapview = TRUE, map.type = "Esri.WorldImagery")
 plot(ctg_tile)
 plot(tal_shp)
-plot(par_shp)
 
+# Lê as informações sobre o Grid inteiro
 shp_talhoes_dir = str_c(shpDir, "/Grid_finalizado.shp")
 shp_talhoes = st_read(shp_talhoes_dir)
+
+
+#### NESSE TEXTO AQUI EU VOU PRECISAR MEXER: MUDEI BASTANTE COISA 
+
 
 # Clipa e salva as núvens das parcelas, e calcula
 # métricas para cada "voxel" clipado com o shape de parcelas no tiles
 # normalizados usando a função .stdmetrics_z de métricas genéricas
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dirParc <- str_c(dirNrm, '/PARCELAS')      # Pasta p/ parcelas clipadas
+if (!dir.exists(dirParc)) {
+  dir.create(dirParc, showWarnings = F)
+}
+
 opt_output_files(ctg_tile) <-     # Onde guardar as nuvens das parcelas
   str_c(dirParc, "/P_{NUMPARCELA}") # renomeadas pelo respectivo número
 opt_select(ctg_tile) <- "xyz"   # Carrega na memória apenas coordenadas   
@@ -324,7 +347,6 @@ opt_filter(ctg_tile) <- "-drop_z_below 0"     # Ignora pontos com z < 0
 # Seleciona apenas as parcelas em que a área é maior do que 1 m²
 talhoes_final <- shp_talhoes %>%
   filter_at(vars(AREAPARCEL), all_vars(. >= 1))
-
 
 metrics_list <- list() # Inicializa uma lista para armazenar as métricas de cada parcela
 
@@ -420,11 +442,12 @@ calcCI = function(err, n, alpha=.05){ # err = desvio padrão, n = tamanho da amo
     qt(1 - alpha/2, n-1) * err # Calcula o quantil da distribuição de t de Student para o nível de liberdade desejado. Multiplica pelo erro para obter o intervalo de confiança
   ) # retorno do ic
 }
-intervaloConfiancaACE = calcCI(erroPadrao_ponderadoACE, numeroAmostras) # Chama a função calcCI para calcular o Intervalo de Confiança
 
 erroPadrao_ponderadoACE = sqrt(VarponderadaACE_final) # Cálculo do desvio padrão
 numeroAmostras = sum(op_ACE$estimation$n2) # Retorna o número de amostras na fazenda
+intervaloConfiancaACE = calcCI(erroPadrao_ponderadoACE, numeroAmostras) # Chama a função calcCI para calcular o Intervalo de Confiança
 erroPercentualACE = (intervaloConfiancaACE*100)/VTCCponderadaACE_final # Cálculo do erro percentual associado à estimativa
+
 
 # Resultados finais da ACE:
 VTCCponderadaACE_final
@@ -460,9 +483,6 @@ foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
 }
 VTCCponderadaDAE_final = sum(VTCCponderadaDAE)
 
-erroPadrao_ponderadoDAE = sqrt(VarponderadaDAE_final)
-intervaloConfiancaDAE = calcCI(erroPadrao_ponderadoDAE, reg2p_nex_est$estimation$n2[1])
-
 #Esquisito esse valor da variância - verificar cálculo. A variância em 5.2 ta mt mais alta, mas tem mais parcelas de campo
 VarponderadaDAE = c()
 foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
@@ -470,6 +490,8 @@ foreach(i = 0:length(unique(talhoes$IDINV)), .combine = 'c') %do% {
 }
 VarponderadaDAE_final = sum(VarponderadaDAE)
 
+erroPadrao_ponderadoDAE = sqrt(VarponderadaDAE_final)
+intervaloConfiancaDAE = calcCI(erroPadrao_ponderadoDAE, reg2p_nex_est$estimation$n2[1])
 erroPercentualDAE = (intervaloConfiancaDAE*100)/VTCCponderadaDAE_final
 
 # Resultados da Dupla Amostragem Estratificada
@@ -578,7 +600,7 @@ tabela # Plot da tabela
 ###
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Este script foi atualizado em Dezembro/2023 depois de instalar,
+# Este script foi atualizado em Setembro/2024 depois de instalar,
 # na seguinte sequência, as mais recentes versões do pacote lidR*:
 #
 #   devtools::install_github("Jean-Romain/rlas", dependencies=TRUE)
